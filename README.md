@@ -14,6 +14,5 @@ Part 5: not started.
 Part 6: not started.
 
 ## Acknowledgements
-Thank you to Lynn Kim, David Kosbie, etc.
 
 Guide: https://www.cs.cmu.edu/~112-3/notes/term-project.html
