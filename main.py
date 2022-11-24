@@ -52,14 +52,21 @@ def onKeyPress(app, key):
         print(app.selection)
     if key == 'b':
         print(app.board)
-    if (app.selection != None) and (key in {1, 2, 3, 4, 5, 6, 7, 8, 9}):
-        print(key)
-        app.selection = key
+    if (app.selection != None) and (key in '123456789'):
+        row, col = app.selection
+        app.board[row][col] = key
+    if (app.selection != None) and (key == 'backspace'):
+        row, col = app.selection
+        app.board[row][col] = None
+
 
 def drawBoard(app):
     for row in range(app.rows):
         for col in range(app.cols):
             drawCell(app, row, col)
+            num = app.board[row][col]
+            if num != None:
+                drawNum(app, row, col, num)
 
 def drawBoardBorder(app):
     # draw the board outline (with double-thickness):
@@ -69,9 +76,9 @@ def drawBoardBorder(app):
                     app.boardTop + j*(app.boardHeight/3), 
                     app.boardWidth/3, app.boardHeight/3,
                     fill=None, border='black',
-                    borderWidth=1.5*app.cellBorderWidth)
+                    borderWidth=2*app.cellBorderWidth)
     drawRect(app.boardLeft, app.boardTop, app.boardWidth, app.boardHeight,
-            fill=None, border='black', borderWidth=3*app.cellBorderWidth)
+            fill=None, border='black', borderWidth=4*app.cellBorderWidth)
 
 def drawCell(app, row, col):
     cellLeft, cellTop = getCellLeftTop(app, row, col)
@@ -80,6 +87,13 @@ def drawCell(app, row, col):
     drawRect(cellLeft, cellTop, cellWidth, cellHeight,
            fill=color, border='black',
            borderWidth=app.cellBorderWidth)
+
+def drawNum(app, row, col, num):
+    cellLeft, cellTop = getCellLeftTop(app, row, col)
+    cellWidth, cellHeight = getCellSize(app)
+    color = 'black'
+    drawLabel(num, cellLeft + cellWidth/2, cellTop + cellHeight/2, 
+            fill=color, size = 16)
 
 def getCell(app, x, y):
     dx = x - app.boardLeft
