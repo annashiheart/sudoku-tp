@@ -1,0 +1,15 @@
+
+
+
+def readFile(path):
+    with open(path, "rt") as f:
+        return f.read()
+boardA = readFile('tp-starter-files/boards/easy-01.png.txt')
+
+def boardTo2DList(board):
+    L = []
+    for line in board.splitlines():
+        M = line.split(' ')
+        L.append(M)
+    return L
+print(boardTo2DList(boardA))
