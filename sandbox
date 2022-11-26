@@ -1,10 +1,13 @@
+import copy
 
-
+# delete this after debugging
+def prettyPrint(L):
+    for row in L:
+        print(row)
 
 def readFile(path):
     with open(path, "rt") as f:
         return f.read()
-boardA = readFile('tp-starter-files/boards/easy-01.png.txt')
 
 def boardTo2DList(board):
     L = []
@@ -12,4 +15,86 @@ def boardTo2DList(board):
         M = line.split(' ')
         L.append(M)
     return L
-print(boardTo2DList(boardA))
+
+boardA = readFile('tp-starter-files/boards/easy-01.png.txt')
+boardA = boardTo2DList(boardA)
+boardASol = readFile('tp-starter-files/solutions/easy-01-solution.png-solution.txt')
+boardASol = boardTo2DList(boardASol)
+
+
+
+# START OF BACKTRACKING CODE
+# adapted from solveMiniSudoku and isLegalSudoku
+def solveSudoku(board):
+    board = copy.deepcopy(board)
+    if findNextEmptyCell(board) == None:
+        return board
+    else:
+        row, col = findNextEmptyCell(board)
+        for i in range(1,10):
+            board[row][col] = str(i)
+            if isBoardLegal(board):
+                # print(board)
+                solution = solveSudoku(board) 
+                if solution != None:
+                    return solution
+            board[row][col] = '0'
+        return None
+
+def findNextEmptyCell(board):
+    rows, cols = len(board), len(board[0])
+    for row in range(rows):
+        for col in range(cols):
+            if board[row][col] == '0':
+                return row, col
+    return None
+
+def isBoardLegal(board):
+    rows, cols = len(board), len(board[0])
+    for row in range(rows):
+        if not isLegalRow(board, row):
+            return False
+    for col in range(cols):
+        if not isLegalCol(board, col):
+            return False
+    blocks = rows
+    for block in range(blocks):
+        if not isLegalBlock(board, block):
+            return False
+    return True
+
+def areLegalValues(L):
+    seen = set()
+    for value in L:
+        # value in not duplicate
+        if value != '0' and value in seen:
+            return False
+        seen.add(value)
+    return True
+
+def isLegalRow(board, row):
+    return areLegalValues(board[row])
+    
+def isLegalCol(board, col):
+    rows = len(board)
+    values = [board[row][col] for row in range(rows)]
+    return areLegalValues(values)
+
+def isLegalBlock(board, block):
+    n = len(board)
+    blockSize = round(n**0.5)
+    startRow = block // blockSize * blockSize
+    startCol = block % blockSize * blockSize
+    values = []
+    for drow in range(blockSize):
+        for dcol in range(blockSize):
+            row, col = startRow + drow, startCol + dcol
+            values.append(board[row][col])
+    return areLegalValues(values)
+
+# END OF COPY
+
+print(boardA == boardASol) # false
+solToBoardA = solveSudoku(boardA)
+print(boardA == boardASol) # false
+print(solToBoardA == boardASol) # true
