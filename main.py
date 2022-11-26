@@ -14,6 +14,15 @@ def prettyPrint(L):
 # CHOOSE AND READ FILE
 ##################################
 
+def chooseRandomNumber(level):
+    if level == 4:
+        randomBoardNumber = random.choice(range(25)) + 1
+    else:
+        randomBoardNumber = random.choice(range(50)) + 1
+    if randomBoardNumber < 10:
+        randomBoardNumber = '0' + str(randomBoardNumber)
+    return str(randomBoardNumber)
+
 def readFile(path):
     with open(path, "rt") as f:
         return f.read()
@@ -48,14 +57,20 @@ def onAppStart(app):
     app.boardWidth = 600
     app.boardHeight = 600
     app.cellBorderWidth = 2
-    app.boardBorderWidth = 2 * app.cellBorderWidth
+    app.blockBorderWidth = 1.5 * app.cellBorderWidth
+    app.boardBorderWidth = 2 * app.blockBorderWidth
+    app.boardLeftSide = app.boardLeft - app.boardWidth/9 - 150
+    app.boardRightSide = app.boardLeft + app.boardWidth/9*10
+    app.buttonWidth = 150
+    app.buttonHeight = 50
     app.selection = None
     app.hoverSelection = None
+    app.hoverNumber = None
     appStarted(app)
 
 def appStarted(app):
-    # randomize this later
-    newBoard = readFile('tp-starter-files/boards/easy-01.png.txt')
+    # randomize this for level
+    newBoard = readFile(f'tp-starter-files/boards/easy-{chooseRandomNumber(1)}.png.txt')
     app.board = boardTo2DList(newBoard)
     app.solutionBoard = solveSudoku(app, app.board)
     app.initialVals = findInitialVals(app.board)
@@ -68,6 +83,8 @@ def redrawAll(app):
     drawBoard(app)
     drawNumberBoxes(app)
     drawBoardBorder(app)
+    drawRightSide(app)
+    drawLeftSide(app)
     if app.isGameOver:
         drawGameOver(app) # change this to a screen!
 
@@ -83,10 +100,11 @@ def drawGameOver(app):
 def drawNumberBoxes(app):
     cellWidth, cellHeight = getCellSize(app)
     for i in range(9):
+        color = 'pink' if i+1 == app.hoverNumber else 'lavenderBlush'
         drawRect(app.boardLeft + i*(app.boardWidth/9), 
                 app.boardTop + app.boardHeight + 20, 
                 app.boardWidth/9, app.boardHeight/9, 
-                fill = 'lavenderBlush', border = 'black', borderWidth = 1)
+                fill = color, border = 'black', borderWidth = 1)
         drawLabel(i+1, app.boardLeft + i*(app.boardWidth/9) + cellWidth/2, 
                 app.boardTop + app.boardHeight + 20 + cellHeight/2, size = 28)
     # draw border for number boxes
@@ -100,7 +118,6 @@ def drawNumberBoxes(app):
             fill = 'gainsboro', border = 'black', borderWidth = app.cellBorderWidth)
     drawLabel(trashSymbol, app.boardLeft + 9.5*(app.boardWidth/9) + cellWidth/2, 
             app.boardTop + app.boardHeight + 20 + cellHeight/2, size = 28, font='symbols')
-
                 
 def drawBoard(app):
     for row in range(app.rows):
@@ -118,10 +135,10 @@ def drawBoardBorder(app):
                     app.boardTop + j*(app.boardHeight/3), 
                     app.boardWidth/3, app.boardHeight/3,
                     fill=None, border='black',
-                    borderWidth = app.boardBorderWidth)
+                    borderWidth = app.blockBorderWidth)
     # draw the outer border
     drawRect(app.boardLeft, app.boardTop, app.boardWidth, app.boardHeight,
-            fill=None, border='black', borderWidth = 2*app.boardBorderWidth)
+            fill=None, border='black', borderWidth = app.boardBorderWidth)
 
 def drawCell(app, row, col):
     cellLeft, cellTop = getCellLeftTop(app, row, col)
@@ -149,6 +166,21 @@ def drawCellNum(app, row, col, cellNum):
     drawLabel(cellNum, cellLeft + cellWidth/2, cellTop + cellHeight/2, 
             fill=color, size = 28,)
 
+def drawRightSide(app):
+    drawRect(app.boardRightSide, app.boardTop, app.buttonWidth, 2*app.buttonHeight, fill = 'lightGrey')
+    drawLabel('mistakes', app.boardRightSide + app.buttonWidth/2, app.boardTop + app.buttonHeight, fill='black', size = 28,)
+    drawRect(app.boardRightSide, app.boardTop + 130, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
+    drawLabel('hint', app.boardRightSide + app.buttonWidth/2, app.boardTop + 130 + app.buttonHeight/2, fill='black', size = 28,)
+
+def drawLeftSide(app):
+    drawRect(app.boardLeftSide, app.boardTop + 200, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
+    drawLabel('home', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 200 + app.buttonHeight/2, fill='black', size = 28,)
+    drawRect(app.boardLeftSide, app.boardTop + 280, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
+    drawLabel('help', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 28,)
+    drawRect(app.boardLeftSide, app.boardTop + 360, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
+    drawLabel('restart', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 28,)
+
+
 ##################################
 # ANIMATION KEY AND MOUSE
 ##################################
@@ -159,7 +191,7 @@ def onMousePress(app, mouseX, mouseY):
         selectedNum = getNumberFromBox(app, mouseX, mouseY)
         if (selectedCell != None) and (selectedCell not in app.initialVals):
             if selectedCell != app.selection:
-                app.selection = selectedCell 
+                app.selection = selectedCell
             else:
                 app.selection = None
         # fill cell by mouse
@@ -179,12 +211,15 @@ def onMouseMove(app, mouseX, mouseY):
         selectedNum = getNumberFromBox(app, mouseX, mouseY)
         if (selectedCell != None) and (selectedCell != app.selection):
             app.hoverSelection = selectedCell
+        elif (selectedNum != None):
+            app.hoverNumber = selectedNum
         else: # add hover over number boxes
             app.hoverSelection = None
+            app.hoverNumber = None
 
 def onKeyPress(app, key):
     if key == 'd':
-        print(app.selection)
+        print(app.hoverNumber)
     if key == 'b':
         print(app.board)
     if (app.selection != None) and (key in '123456789'):
