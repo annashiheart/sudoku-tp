@@ -63,9 +63,6 @@ def onAppStart(app):
     app.boardRightSide = app.boardLeft + app.boardWidth/9*10
     app.buttonWidth = 150
     app.buttonHeight = 50
-    app.selection = None
-    app.hoverSelection = None
-    app.hoverNumber = None
     appStarted(app)
 
 def appStarted(app):
@@ -74,28 +71,31 @@ def appStarted(app):
     app.board = boardTo2DList(newBoard)
     app.solutionBoard = solveSudoku(app, app.board)
     app.initialVals = findInitialVals(app.board)
+    app.selection = None
+    app.hoverSelection = None
+    app.hoverNumber = None
     app.isGameOver = False
     app.paused = False
-    app.stepsPerSecond = 1
-    app.score = 0
+    app.mistakes = 0
 
 def redrawAll(app):
-    drawBoard(app)
-    drawNumberBoxes(app)
-    drawBoardBorder(app)
-    drawRightSide(app)
-    drawLeftSide(app)
     if app.isGameOver:
         drawGameOver(app) # change this to a screen!
+    else:
+        drawBoard(app)
+        drawNumberBoxes(app)
+        drawBoardBorder(app)
+        drawRightSide(app)
+        drawLeftSide(app)
+
 
 def drawGameOver(app):
     drawRect(app.boardLeft, app.boardTop, app.boardWidth, 
-            app.boardHeight, fill= 'black', opacity = 80)
-    drawLabel('Game Over!', 200, 180, size = 26, 
+            app.boardHeight, fill = 'black', opacity = 80)
+    drawLabel('Game Over!', app.width/2, app.height/2, size = 40, 
             fill = 'white', bold = True)
-    drawLabel(f'You scored {app.score} points!', 
+    drawLabel(f'You made {app.mistakes} mistakes!', 
             200, 220, size = 20, fill = 'white')
-    drawLabel('Press r to restart', 200, 320, size = 20, fill = 'white')
 
 def drawNumberBoxes(app):
     cellWidth, cellHeight = getCellSize(app)
@@ -168,7 +168,7 @@ def drawCellNum(app, row, col, cellNum):
 
 def drawRightSide(app):
     drawRect(app.boardRightSide, app.boardTop, app.buttonWidth, 2*app.buttonHeight, fill = 'lightGrey')
-    drawLabel('mistakes', app.boardRightSide + app.buttonWidth/2, app.boardTop + app.buttonHeight, fill='black', size = 28,)
+    drawLabel(f'{app.mistakes}', app.boardRightSide + app.buttonWidth/2, app.boardTop + app.buttonHeight, fill='black', size = 28,)
     drawRect(app.boardRightSide, app.boardTop + 130, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('hint', app.boardRightSide + app.buttonWidth/2, app.boardTop + 130 + app.buttonHeight/2, fill='black', size = 28,)
 
@@ -178,7 +178,7 @@ def drawLeftSide(app):
     drawRect(app.boardLeftSide, app.boardTop + 280, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('help', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 28,)
     drawRect(app.boardLeftSide, app.boardTop + 360, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('restart', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 28,)
+    drawLabel('legals on', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 28,)
 
 
 ##################################
@@ -196,14 +196,13 @@ def onMousePress(app, mouseX, mouseY):
                 app.selection = None
         # fill cell by mouse
         elif (selectedNum != None) and (app.selection != None):
-            row, col = app.selection
-            app.board[row][col] = str(selectedNum)
+            selectedNum = str(selectedNum)
+            addNumber(app, selectedNum)
         # delete number by mouse
         elif ((app.selection != None) and
             (app.boardLeft + 9.5 * (app.boardWidth/9) <= mouseX <= app.boardLeft + 10.5 * (app.boardWidth/9)) and 
             (app.boardTop + app.boardHeight + 20 <= mouseY <= app.boardTop + app.boardHeight + 20 + app.boardHeight/9)):
-            row, col = app.selection
-            app.board[row][col] = '0'
+            addNumber(app, '0')
 
 def onMouseMove(app, mouseX, mouseY):
     if not app.isGameOver:
@@ -223,11 +222,9 @@ def onKeyPress(app, key):
     if key == 'b':
         print(app.board)
     if (app.selection != None) and (key in '123456789'):
-        row, col = app.selection
-        app.board[row][col] = key
+        addNumber(app, key)
     if (app.selection != None) and (key == 'backspace'):
-        row, col = app.selection
-        app.board[row][col] = '0'
+        addNumber(app, '0')
 
 ##################################
 # ANIMATION CONTROLLER
@@ -329,6 +326,21 @@ def isLegalBlock(board, block):
             row, col = startRow + drow, startCol + dcol
             values.append(board[row][col])
     return areLegalValues(values)
+
+##################################
+# CHECK FOR WIN
+##################################
+
+def addNumber(app, number):
+    row, col = app.selection
+    app.board[row][col] = number
+    # check if mistake
+    if (number != app.solutionBoard[row][col]) and (number != '0'):
+            app.mistakes += 1
+    # check if game over
+    if app.board == app.solutionBoard:
+        app.isGameOver = True
+
 
 ##################################
 # RUN APP
