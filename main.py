@@ -182,11 +182,11 @@ def drawLeftSide(app):
     drawRect(app.boardLeftSide, app.boardTop + 360, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('legals on', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 28,)
 
-# do this
 def drawLegals(app, row, col):
     cellLeft, cellTop = getCellLeftTop(app, row, col)
     for i in range(9):
         block = row//3 * 3 + col//3
+        # will likely have to move this so that it doesn't reset every time it's drawn
         cellLegals = Legals(app.board, row, col, block)
         if str(i+1) in cellLegals.legals:
             legalRow = i//3 + 1
@@ -232,20 +232,32 @@ def onMouseMove(app, mouseX, mouseY):
             app.hoverNumber = None
 
 def onKeyPress(app, key):
-    if key == 'd':
-        print(app.hoverNumber)
-        # print legals
-    if (app.selection != None) and (key == 'l'):
-        row, col = app.selection
-        block = row//3 * 3 + col//3
-        selectionLegals = Legals(app.board, row, col, block)
-        selectionLegals.printLegals()
-    if (app.selection == None) and (key == 'l'):
+    if key == 'l':
         app.showLegals = not app.showLegals
-    if (app.selection != None) and (key in '123456789'):
-        addNumber(app, key)
-    if (app.selection != None) and (key == 'backspace'):
-        addNumber(app, '0')
+    if app.selection != None:
+        row, col = app.selection
+        if key == 'e':
+            app.selection = findNextEmptyCellFromHere(app, app.board, row, col)
+        if key in '123456789':
+            addNumber(app, key)
+        if key == 'backspace':
+            addNumber(app, '0')
+        if key == 's':
+            row, col = app.selection
+            block = row//3 * 3 + col//3
+            cellLegals = Legals(app.board, row, col, block)
+            if len(cellLegals.legals) == 1:
+                for value in cellLegals.legals:
+                    app.board[row][col] = value
+            else:
+                app.selection = findNextEmptyCellFromHere(app, app.board, row, col)
+    if app.selection == None:
+        if key == 'e':
+            app.selection = findNextEmptyCellFromHere(app, app.board, -1, app.cols)
+        if key == 's':
+            app.selection = findNextEmptyCellFromHere(app, app.board, -1, app.cols)
+
+
 
 ##################################
 # ANIMATION CONTROLLER
@@ -287,10 +299,10 @@ def getNumberFromBox(app, x, y):
 
 def solveSudoku(app, board):
     board = copy.deepcopy(board) # is this bad
-    if findNextEmptyCell(app, board) == None:
+    if findNextEmptyCellFromHere(app, board, 0, 0) == None:
         return board
     else:
-        row, col = findNextEmptyCell(app, board)
+        row, col = findNextEmptyCellFromHere(app, board, 0, 0)
         for i in range(1,10):
             board[row][col] = str(i)
             if isBoardLegal(app, board):
@@ -300,10 +312,10 @@ def solveSudoku(app, board):
             board[row][col] = '0'
         return None
 
-def findNextEmptyCell(app, board):
-    for row in range(app.rows):
+def findNextEmptyCellFromHere(app, board, givenRow, givenCol):
+    for row in range(givenRow, app.rows):
         for col in range(app.cols):
-            if board[row][col] == '0':
+            if board[row][col] == '0' and not (row == givenRow and col <= givenCol):
                 return row, col
     return None
 
@@ -377,6 +389,12 @@ class Legals():
     
     def printLegals(self):
         print(self.legals)
+    
+    def setLegal(self, num):
+        self.legals.add(num)
+    
+    def banLegal(self, num):
+        self.legals.remove(num)
 
 def findValues(L):
     seen = set()
