@@ -77,6 +77,7 @@ def appStarted(app):
     app.isGameOver = False
     app.paused = False
     app.mistakes = 0
+    app.showLegals = False
 
 def redrawAll(app):
     if app.isGameOver:
@@ -88,14 +89,13 @@ def redrawAll(app):
         drawRightSide(app)
         drawLeftSide(app)
 
-
 def drawGameOver(app):
     drawRect(app.boardLeft, app.boardTop, app.boardWidth, 
-            app.boardHeight, fill = 'black', opacity = 80)
-    drawLabel('Game Over!', app.width/2, app.height/2, size = 40, 
+            app.boardHeight, fill = 'black', opacity = 50)
+    drawLabel('You won!', app.width/2, app.height/2 - 100, size = 40, 
             fill = 'white', bold = True)
     drawLabel(f'You made {app.mistakes} mistakes!', 
-            200, 220, size = 20, fill = 'white')
+            app.width/2, app.height/2 + 100, size = 30, fill = 'white')
 
 def drawNumberBoxes(app):
     cellWidth, cellHeight = getCellSize(app)
@@ -126,6 +126,8 @@ def drawBoard(app):
             cellNum = app.board[row][col]
             if (cellNum != '0'):
                 drawCellNum(app, row, col, cellNum)
+            elif app.showLegals:
+                drawLegals(app, row, col)
 
 def drawBoardBorder(app):
     # draw the blocks
@@ -180,6 +182,19 @@ def drawLeftSide(app):
     drawRect(app.boardLeftSide, app.boardTop + 360, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('legals on', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 28,)
 
+# do this
+def drawLegals(app, row, col):
+    cellLeft, cellTop = getCellLeftTop(app, row, col)
+    for i in range(9):
+        block = row//3 * 3 + col//3
+        cellLegals = Legals(app.board, row, col, block)
+        if str(i+1) in cellLegals.legals:
+            legalRow = i//3 + 1
+            legalCol = i%3 + 1
+            legalSpacing = (app.boardWidth//9) / 4
+            drawLabel(i+1, cellLeft + legalCol*legalSpacing, 
+                    cellTop + legalRow*legalSpacing, fill='grey',)
+
 
 ##################################
 # ANIMATION KEY AND MOUSE
@@ -219,8 +234,14 @@ def onMouseMove(app, mouseX, mouseY):
 def onKeyPress(app, key):
     if key == 'd':
         print(app.hoverNumber)
-    if key == 'b':
-        print(app.board)
+        # print legals
+    if (app.selection != None) and (key == 'l'):
+        row, col = app.selection
+        block = row//3 * 3 + col//3
+        selectionLegals = Legals(app.board, row, col, block)
+        selectionLegals.printLegals()
+    if (app.selection == None) and (key == 'l'):
+        app.showLegals = not app.showLegals
     if (app.selection != None) and (key in '123456789'):
         addNumber(app, key)
     if (app.selection != None) and (key == 'backspace'):
@@ -302,7 +323,6 @@ def isBoardLegal(app, board):
 def areLegalValues(L):
     seen = set()
     for value in L:
-        # value in not duplicate
         if value != '0' and value in seen:
             return False
         seen.add(value)
@@ -341,6 +361,48 @@ def addNumber(app, number):
     if app.board == app.solutionBoard:
         app.isGameOver = True
 
+
+##################################
+# FIND LEGALS
+##################################
+
+class Legals():
+    def __init__(self, board, row, col, block):
+        self.board = board
+        self.row = row
+        self.col = col
+        self.block = block
+        illegalSet = findValuesinRow(self.board, self.row) | findValuesinCol(self.board, self.col) | findValuesinBlock(self.board, self.block)
+        self.legals = {'1','2','3','4','5','6','7','8','9'} - illegalSet
+    
+    def printLegals(self):
+        print(self.legals)
+
+def findValues(L):
+    seen = set()
+    for value in L:
+        if value != '0':
+            seen.add(value)
+    return seen
+
+def findValuesinRow(board, row):
+    return findValues(board[row])
+    
+def findValuesinCol(board, col):
+    rows = len(board)
+    values = [board[row][col] for row in range(rows)]
+    return findValues(values)
+
+def findValuesinBlock(board, block):
+    blockSize = 3
+    startRow = block // blockSize * blockSize
+    startCol = block % blockSize * blockSize
+    values = []
+    for drow in range(blockSize):
+        for dcol in range(blockSize):
+            row, col = startRow + drow, startCol + dcol
+            values.append(board[row][col])
+    return findValues(values)
 
 ##################################
 # RUN APP
