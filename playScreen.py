@@ -4,7 +4,7 @@ import random
 import copy
 
 ##################################
-# FOR DEBUGGING PURPOSES
+# FOR DEBUGGING
 ##################################
 def prettyPrint(L):
     for row in L:
@@ -14,8 +14,8 @@ def prettyPrint(L):
 # CHOOSE AND READ FILE
 ##################################
 
-def chooseRandomNumber(level):
-    if level == 4:
+def chooseRandomNumber(app):
+    if app.level == 'evil':
         randomBoardNumber = random.choice(range(25)) + 1
     else:
         randomBoardNumber = random.choice(range(50)) + 1
@@ -63,11 +63,13 @@ def playScreen_onScreenStart(app):
     app.boardRightSide = app.boardLeft + app.boardWidth/9*10
     app.buttonWidth = 150
     app.buttonHeight = 50
+    app.stepsPerSecond = 2
     appStarted(app)
 
 def appStarted(app):
     # randomize this for level
-    newBoard = readFile(f'tp-starter-files/boards/easy-{chooseRandomNumber(1)}.png.txt')
+    app.level = 'evil'
+    newBoard = readFile(f'tp-starter-files/boards/{app.level}-{chooseRandomNumber(app)}.png.txt')
     app.board = boardTo2DList(newBoard)
     app.solutionBoard = solveSudoku(app, app.board)
     app.initialVals = findInitialVals(app.board)
@@ -80,16 +82,16 @@ def appStarted(app):
     app.showLegals = False
     app.legalsBoard = findInitialLegalsBoard(app)
     app.legalsEditMode = False # do this later
+    app.autoPlayOn = False
 
 def playScreen_redrawAll(app):
+    drawBoard(app)
+    drawNumberBoxes(app)
+    drawBoardBorder(app)
+    drawRightSide(app)
+    drawLeftSide(app)
     if app.isGameOver:
-        drawGameOver(app) # change this to a screen!
-    else:
-        drawBoard(app)
-        drawNumberBoxes(app)
-        drawBoardBorder(app)
-        drawRightSide(app)
-        drawLeftSide(app)
+        drawGameOver(app) # change this to screen?
 
 def drawGameOver(app):
     drawRect(app.boardLeft, app.boardTop, app.boardWidth, 
@@ -108,17 +110,18 @@ def drawNumberBoxes(app):
                 app.boardWidth/9, app.boardHeight/9, 
                 fill = color, border = 'black', borderWidth = 1)
         drawLabel(i+1, app.boardLeft + i*(app.boardWidth/9) + cellWidth/2, 
-                app.boardTop + app.boardHeight + 20 + cellHeight/2, size = 28)
+                app.boardTop + app.boardHeight + 20 + cellHeight/2, size = 28,
+                bold = True, font = 'monospace')
     # draw border for number boxes
     drawRect(app.boardLeft, app.boardTop + app.boardHeight + 20,
             app.boardWidth, app.boardHeight/9, fill = None, border = 'black',
             borderWidth = app.cellBorderWidth)
     # draw delete symbol
-    crossSymbol = chr(0x2715)
+    # crossSymbol = chr(0x2715)
     drawRect(app.boardLeft + 9.5 * (app.boardWidth/9), app.boardTop + app.boardHeight + 20, 
             app.boardWidth/9, app.boardHeight/9, 
             fill = 'gainsboro', border = 'black', borderWidth = app.cellBorderWidth)
-    drawLabel(crossSymbol, app.boardLeft + 9.5*(app.boardWidth/9) + cellWidth/2, 
+    drawLabel('X', app.boardLeft + 9.5*(app.boardWidth/9) + cellWidth/2, 
             app.boardTop + app.boardHeight + 20 + cellHeight/2, size = 28, font='symbols')
                 
 def drawBoard(app):
@@ -168,27 +171,27 @@ def drawCellNum(app, row, col, cellNum):
     else:
         color = 'red'
     drawLabel(cellNum, cellLeft + cellWidth/2, cellTop + cellHeight/2, 
-            fill=color, size = 28,)
+            fill=color, size = 28, font = 'monospace')
 
 def drawRightSide(app):
     drawRect(app.boardRightSide, app.boardTop, app.buttonWidth, 2*app.buttonHeight, fill = 'lightGrey')
-    drawLabel(f'{app.mistakes}', app.boardRightSide + app.buttonWidth/2, app.boardTop + app.buttonHeight, fill='black', size = 28,)
+    drawLabel(f'{app.mistakes}', app.boardRightSide + app.buttonWidth/2, app.boardTop + app.buttonHeight, fill='black', size = 28, font = 'monospace')
     drawRect(app.boardRightSide, app.boardTop + 130, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('hint', app.boardRightSide + app.buttonWidth/2, app.boardTop + 130 + app.buttonHeight/2, fill='black', size = 28,)
+    drawLabel('hint', app.boardRightSide + app.buttonWidth/2, app.boardTop + 130 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
 
 def drawLeftSide(app):
     drawRect(app.boardLeftSide, app.boardTop + 200, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('home', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 200 + app.buttonHeight/2, fill='black', size = 28,)
+    drawLabel('home', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 200 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 280, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('help', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 28,)
+    drawLabel('help', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 360, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('legals on', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 28,)
+    drawLabel('legals', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
 
 def drawLegals(app, row, col):
     cellLeft, cellTop = getCellLeftTop(app, row, col)
     for i in range(9):
         cellLegals = app.legalsBoard[row][col]
-        if str(i+1) in cellLegals.legals:
+        if str(i+1) in cellLegals.shownLegals:
             legalRow = i//3 + 1
             legalCol = i%3 + 1
             legalSpacing = (app.boardWidth//9) / 4
@@ -224,7 +227,9 @@ def playScreen_onMouseMove(app, mouseX, mouseY):
         selectedNum = getNumberFromBox(app, mouseX, mouseY)
         if (selectedCell != None) and (selectedCell != app.selection):
             app.hoverSelection = selectedCell
+            app.hoverNumber = None
         elif (selectedNum != None):
+            app.hoverSelection = None
             app.hoverNumber = selectedNum
         else: # add hover over number boxes
             app.hoverSelection = None
@@ -232,18 +237,24 @@ def playScreen_onMouseMove(app, mouseX, mouseY):
 
 def playScreen_onKeyPress(app, key):
     if key == 'p' and app.selection != None:
-        row, col = app.selection
-        print(app.legalsBoard[row][col].printLegals())
+        #row, col = app.selection
+        #print(row, col, app.board[row][col])
+        print(app.level)
     if key == 'a' and app.selection != None:
         row, col = app.selection
-        for v in range(len(app.legalsBoard)):
-            for w in range(len(app.legalsBoard[v])):
-                print(app.legalsBoard[v][w].legals)
-        print(row, col, app.legalsBoard[row][col].legals)        
+        leg = app.legalsBoard[row][col]
+        print(row, col, leg.legals)        
+        print(leg.manualLegals)        
+        print(leg.manualIllegals)
+        print(leg.legals | leg.manualLegals) 
+        print(leg.illegals | leg.manualIllegals)
+        print(leg.shownLegals)
     if key == 'l':
         app.showLegals = not app.showLegals
     if key == 's':
         hint1(app)
+    if key == 'S': # check this later
+        app.autoPlayOn = not app.autoPlayOn
     if app.selection != None:
         row, col = app.selection
         if key == 'right':
@@ -252,27 +263,14 @@ def playScreen_onKeyPress(app, key):
             addNumber(app, key)
         if key == 'backspace':
             addNumber(app, '0')
-        """
-        if key == 's':
-            if findNextSingletonCell(app, app.board, row, col) != None:
-                singletonRow, singletonCol, value = findNextSingletonCell(app, app.board, row, col)
-                print(singletonRow, singletonCol, value)
-                app.selection = singletonRow, singletonCol
-                app.board[singletonRow][singletonCol] = value
-            
-            row, col = app.selection
-            block = row//3 * 3 + col//3
-            cellLegals = Legals(app.board, row, col, block)
-            if len(cellLegals.legals) == 1:
-                for value in cellLegals.legals:
-                    app.board[row][col] = value
-            else:
-                app.selection = findNextEmptyCellFromHere(app, app.board, row, col)
-        """
     if app.selection == None:
         if key == 'right':
             app.selection = findNextEmptyCellFromHere(app, app.board, -1, app.cols)
 
+def playScreen_onStep(app):
+    if app.autoPlayOn:
+        hint1(app)
+        
 ##################################
 # ANIMATION CONTROLLER
 ##################################
@@ -334,11 +332,13 @@ def findNextEmptyCellFromHere(app, board, givenRow, givenCol):
 
 def findNextSingletonCell(app, board, givenRow, givenCol):
     app.selection = findNextEmptyCellFromHere(app, app.board, givenRow, givenCol)
-    if app.selection == None: return None
+    if app.selection == None:
+        print('aha!') 
+        return None
     row, col = app.selection
     cellLegals = app.legalsBoard[row][col]
-    if len(cellLegals.legals) == 1:
-        for value in cellLegals.legals:
+    if len(cellLegals.shownLegals) == 1:
+        for value in cellLegals.shownLegals:
             return row, col, app.solutionBoard[row][col]
     else:
         return findNextSingletonCell(app, app.board, row, col)
@@ -385,11 +385,12 @@ def isLegalBlock(board, block):
     return areLegalValues(values)
 
 ##################################
-# CHECK FOR WIN
+# PLAYER MOVES
 ##################################
 
 def addNumber(app, number):
     row, col = app.selection
+    prevValue = app.board[row][col]
     app.board[row][col] = number
     # check if mistake
     if (number != app.solutionBoard[row][col]) and (number != '0'):
@@ -397,16 +398,18 @@ def addNumber(app, number):
     # check if game over
     if app.board == app.solutionBoard:
         app.isGameOver = True
-    # set the legals
+    # ban the legals
     block = row//3 * 3 + col//3
     for rowIndex in range(len(app.legalsBoard)):
         for colIndex in range(len(app.legalsBoard[rowIndex])):
             blockIndex = rowIndex//3 * 3 + colIndex//3
             cellLegals = app.legalsBoard[rowIndex][colIndex]
-            if (rowIndex == row) or (colIndex == col) or (blockIndex == block):
-                print(rowIndex,colIndex, cellLegals.legals)
-                print(colIndex,rowIndex, cellLegals.legals)
-                cellLegals.banLegal(number)
+            if number == '0': # fix
+                if (rowIndex == row) or (colIndex == col) or (blockIndex == block):
+                    cellLegals.setLegal(prevValue)
+            else:
+                if ((rowIndex == row) or (colIndex == col) or (blockIndex == block)) and not ((rowIndex == row) and (colIndex == col)):
+                    cellLegals.banLegal(number)
 
 ##################################
 # FIND LEGALS
@@ -431,16 +434,24 @@ class Legals():
         self.block = block
         self.illegals = findValuesinRow(self.board, self.row) | findValuesinCol(self.board, self.col) | findValuesinBlock(self.board, self.block)
         self.legals = {'1','2','3','4','5','6','7','8','9'} - self.illegals
+        self.manualLegals = set()
+        self.manualIllegals = set()
+        self.shownLegals = self.legals | self.manualLegals - self.manualIllegals
     
     def printLegals(self):
         print(self.legals)
     
     def setLegal(self, num):
-        self.legals.add(num)
-    
+        self.manualLegals.add(num)
+        if num in self.manualIllegals:
+            self.manualIllegals.remove(num)
+        self.shownLegals = (self.legals | self.manualLegals) - (self.illegals | self.manualIllegals)
+
     def banLegal(self, num):
-        if num in self.legals:
-            self.legals.remove(num)
+        if num in self.manualLegals:
+            self.manualLegals.remove(num)
+        self.manualIllegals.add(num)
+        self.shownLegals = (self.legals | self.manualLegals) - (self.illegals | self.manualIllegals)
 
 def findValues(L):
     seen = set()
@@ -468,42 +479,19 @@ def findValuesinBlock(board, block):
             values.append(board[row][col])
     return findValues(values)
 
-        
-"""
-def findValuesinRow(board, row):
-    return findValues(board[row])
-    
-def findValuesinCol(board, col):
-    rows = len(board)
-    values = [board[row][col] for row in range(rows)]
-    return findValues(values)
-
-def findValuesinBlock(board, block):
-    blockSize = 3
-    startRow = block // blockSize * blockSize
-    startCol = block % blockSize * blockSize
-    values = []
-    for drow in range(blockSize):
-        for dcol in range(blockSize):
-            row, col = startRow + drow, startCol + dcol
-            values.append(board[row][col])
-    return findValues(values)
-"""
-
-    
-
 ##################################
-# PROVIDE HINT
+# PROVIDE HINTS
 ##################################
 
 def hint1(app):
     if app.selection == None:
-        app.selection = findNextEmptyCellFromHere(app, app.board, -1, app.cols)
-    if app.selection != None:
+        row, col = -1, app.cols
+    else:
         row, col = app.selection
-        if findNextSingletonCell(app, app.board, row, col) != None:
-            singletonRow, singletonCol, value = findNextSingletonCell(app, app.board, row, col)
-            app.selection = singletonRow, singletonCol
-            addNumber(app, value)
-            # app.board[singletonRow][singletonCol] = value
-            # makeMove(app, singletonRow, singletonCol, value)
+    if findNextSingletonCell(app, app.board, row, col) != None:
+        singletonRow, singletonCol, value = findNextSingletonCell(app, app.board, row, col)
+        app.selection = singletonRow, singletonCol
+        addNumber(app, value)
+
+def hint2(app): # to do later
+    pass

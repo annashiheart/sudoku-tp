@@ -14,6 +14,7 @@ def homeScreen_onScreenStart(app):
     app.largeButtonHeight = 75
     app.smallButtonWidth = 120
     app.smallButtonHeight = 50
+    app.level = None
 
 def homeScreen_onKeyPress(app, key):
     if key == 's': setActiveScreen('playScreen')
