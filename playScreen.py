@@ -232,6 +232,10 @@ def playScreen_onMouseMove(app, mouseX, mouseY):
             app.hoverNumber = None
 
 def playScreen_onKeyPress(app, key):
+    if key == 'a':
+        row, col = app.selection
+        print(app.board[row][col])
+        print(app.solutionBoard[row][col])
     if key == 'l':
         app.showLegals = not app.showLegals
     if app.selection != None:
@@ -292,17 +296,16 @@ def getNumberFromBox(app, x, y):
             return i+1
     return None
 
-
 ##################################
 # FIND BOARD SOLUTION
 ##################################
 
 def solveSudoku(app, board):
     board = copy.deepcopy(board) # is this bad
-    if findNextEmptyCellFromHere(app, board, 0, 0) == None:
+    if findNextEmptyCellFromHere(app, board, -1, app.cols) == None:
         return board
     else:
-        row, col = findNextEmptyCellFromHere(app, board, 0, 0)
+        row, col = findNextEmptyCellFromHere(app, board, -1, app.cols)
         for i in range(1,10):
             board[row][col] = str(i)
             if isBoardLegal(app, board):
@@ -318,6 +321,9 @@ def findNextEmptyCellFromHere(app, board, givenRow, givenCol):
             if board[row][col] == '0' and not (row == givenRow and col <= givenCol):
                 return row, col
     return None
+
+def findNextSingletonCellFromHere(app, board, givenRow, givenCol):
+    pass
 
 def isBoardLegal(app, board):
     for row in range(app.rows):

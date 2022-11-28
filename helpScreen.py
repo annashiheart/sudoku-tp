@@ -8,18 +8,19 @@ from runAppWithScreens import *
 ##################################
 
 def helpScreen_onScreenStart(app):
-    app.cx = app.width/2
-    app.dx = 10
+    app.largeButtonWidth = 600
+    app.largeButtonHeight = 75
 
 def helpScreen_onKeyPress(app, key):
-    if key == 's': setActiveScreen('screen1')
-    elif key == 'd': app.dx = -app.dx
-
-def helpScreen_onStep(app):
-    app.cx = (app.cx + app.dx) % app.width
+    if key == 'h': setActiveScreen('homeScreen')
 
 def helpScreen_redrawAll(app):
     drawLabel('helpScreen', app.width/2, 30, size=16)
-    drawLabel('Press d to change direction of dot', app.width/2, 50, size=16)
-    drawLabel('Press s to change the screen to screen1', app.width/2, 70, size=16)
-    drawCircle(app.cx, app.height/2, 50, fill='lightGreen')
+    drawRect(app.width/2 - app.largeButtonWidth/2, 550, app.largeButtonWidth, app.largeButtonHeight, fill = 'gainsboro')
+    drawLabel('return home', app.width/2, 550 + app.largeButtonHeight/2, size=48, font = 'monospace')
+
+def helpScreen_onMousePress(app, mouseX, mouseY):
+    # return home
+    if ((app.width/2 - app.largeButtonWidth/2 <= mouseX <= app.width/2 + app.largeButtonWidth/2) and 
+        (550 <= mouseY <= 550 + app.largeButtonHeight)):
+        setActiveScreen('homeScreen')
