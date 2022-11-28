@@ -101,11 +101,11 @@ def playScreen_redrawAll(app):
 
 def drawGameOver(app):
     drawRect(app.boardLeft, app.boardTop, app.boardWidth, 
-            app.boardHeight, fill = 'black', opacity = 50)
+            app.boardHeight, fill = 'black', opacity = 80)
     drawLabel('You won!', app.width/2, app.height/2 - 100, size = 40, 
             fill = 'white', bold = True)
     drawLabel(f'You made {app.mistakes} mistakes!', 
-            app.width/2, app.height/2 + 100, size = 30, fill = 'white')
+            app.width/2, app.height/2 - 50, size = 30, fill = 'white')
 
 def drawNumberBoxes(app):
     cellWidth, cellHeight = getCellSize(app)
@@ -176,9 +176,11 @@ def drawRightSide(app):
     drawLabel(f'{app.mistakes}', app.boardRightSide + app.buttonWidth/2, app.boardTop + app.buttonHeight, fill='black', size = 28, font = 'monospace')
     drawRect(app.boardRightSide, app.boardTop + 130, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('delete', app.boardRightSide + app.buttonWidth/2, app.boardTop + 130 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
-    drawRect(app.boardRightSide, app.boardTop + 475, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
+    color = 'grey' if app.showLegals else 'lightGrey'
+    drawRect(app.boardRightSide, app.boardTop + 475, app.buttonWidth, app.buttonHeight, fill = color)
     drawLabel('legals', app.boardRightSide + app.buttonWidth/2, app.boardTop + 475 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
-    drawRect(app.boardRightSide, app.boardTop + 550, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
+    color = 'grey' if app.legalsEditMode else 'lightGrey'
+    drawRect(app.boardRightSide, app.boardTop + 550, app.buttonWidth, app.buttonHeight, fill = color)
     drawLabel('notes', app.boardRightSide + app.buttonWidth/2, app.boardTop + 550 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
 
 def drawLeftSide(app):
@@ -293,7 +295,8 @@ def playScreen_onKeyPress(app, key):
             else:
                 addNumber(app, key)
         if key == 'backspace':
-            addNumber(app, '0')
+            if not app.legalsEditMode:
+                addNumber(app, '0')
     if app.selection == None:
         if key == 'right':
             app.selection = findNextEmptyCellFromHere(app, app.board, -1, app.cols)
@@ -451,6 +454,8 @@ def addNumber(app, number):
     # check if game over
     if app.board == app.solutionBoard:
         app.isGameOver = True
+        app.selection = None
+        app.hoverSelection = None
     # ban the legals
     block = row//3 * 3 + col//3
     for rowIndex in range(len(app.legalsBoard)):
@@ -467,6 +472,7 @@ def addNumber(app, number):
                 if ((rowIndex == row) or (colIndex == col) or (blockIndex == block)) and not ((rowIndex == row) and (colIndex == col)) :
                     if number in cellLegals.legals and number in cellLegals.shownLegals:
                         cellLegals.manualIllegals.add(number)
+                    cellLegals.shownLegals = (cellLegals.legals | cellLegals.manualLegals) - cellLegals.manualIllegals
                     if prevValue in cellLegals.legals and number not in cellLegals.shownLegals:
                         cellLegals.manualIllegals.remove(prevValue)
                     cellLegals.shownLegals = (cellLegals.legals | cellLegals.manualLegals) - cellLegals.manualIllegals
@@ -509,7 +515,7 @@ def setAndBanLegals(cellLegals, key):
         cellLegals.manualIllegals.add(key)
     elif key in cellLegals.illegals:
         cellLegals.manualLegals.add(key)
-    cellLegals.shownLegals = (cellLegals.shownLegals | cellLegals.manualLegals) - cellLegals.manualIllegals
+    cellLegals.shownLegals = (cellLegals.legals | cellLegals.manualLegals) - cellLegals.manualIllegals
 
 def findValues(L):
     seen = set()

@@ -19,9 +19,11 @@ def helpScreen_redrawAll(app):
             fill=None, border='gainsboro', borderWidth = app.boardBorderWidth)
     instructions = ['press h to return to the home page',
                     'press g to return to your game',
+                    'press l to show legals',
+                    'press n to edit legals',
                     'press s to use a hint (get a value)',
                     'press S to watch the solution (easy only)',
-                    'press the right arrow to move to the next cell',
+                    'press keyboard arrows to move across the board',
                     'press the backspace button to delete a move']
     for i in range(len(instructions)):
         drawLabel(instructions[i], app.width/2, app.boardTop + 40 + i*40, size=20, font = 'monospace')
