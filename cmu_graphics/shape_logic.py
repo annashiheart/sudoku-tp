@@ -1616,8 +1616,6 @@ def getFont(baseFontName, isBold=False, isItalic=False):
         fontName = 'Courier New'
     elif 'arial' in baseFontName or 'sans' in baseFontName:
         fontName = 'Arial'
-    elif baseFontName.lower() in ('serif', 'sans-serif', 'cursive', 'fantasy', 'monospace'):
-        fontName = baseFontName.lower()
     else:
         fontName = 'Arial'
 
