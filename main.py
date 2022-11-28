@@ -4,6 +4,7 @@ except: from cmu_graphics import *
 from runAppWithScreens import *
 from playScreen import *
 from homeScreen import *
+from helpScreen import *
 
 ##################################
 # main
