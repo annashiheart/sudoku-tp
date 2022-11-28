@@ -1,53 +1,12 @@
 from cmu_cs3_graphics import *
 import math
-import random
-import copy
 
 from runAppWithScreens import *
+from homeScreen import *
 
 ##################################
 # playScreen
 ##################################
-
-##################################
-# FOR DEBUGGING
-##################################
-def prettyPrint(L):
-    for row in L:
-        print(row)
-
-##################################
-# CHOOSE AND READ FILE
-##################################
-
-def chooseRandomNumber(app):
-    if app.level == 'evil':
-        randomBoardNumber = random.choice(range(25)) + 1
-    else:
-        randomBoardNumber = random.choice(range(50)) + 1
-    if randomBoardNumber < 10:
-        randomBoardNumber = '0' + str(randomBoardNumber)
-    return str(randomBoardNumber)
-
-def readFile(path):
-    with open(path, "rt") as f:
-        return f.read()
-
-def boardTo2DList(board):
-    L = []
-    for line in board.splitlines():
-        M = line.split(' ')
-        L.append(M)
-    return L
-
-def findInitialVals(board):
-    initialVals = set()
-    for row in range(len(board)):
-        for col in range(len(board[0])):
-            initialNum = board[row][col]
-            if (initialNum != '0'):
-                initialVals.add((row, col))
-    return initialVals
 
 ##################################
 # ANIMATION VIEW
@@ -72,30 +31,6 @@ def playScreen_onScreenStart(app):
     app.stepsPerSecond = 2
     appStarted(app)
 
-def appStarted(app):
-    # randomize this for level
-    if app.level != 'custom':
-        newBoard = readFile(f'tp-starter-files/boards/{app.level}-{chooseRandomNumber(app)}.png.txt')
-        app.board = boardTo2DList(newBoard)
-        app.solutionBoard = solveSudoku(app, app.board)
-        app.initialVals = findInitialVals(app.board)
-        app.boardEditMode = False
-    else:
-        app.board = [['0' for v in range(app.cols)] for w in range(app.rows)]
-        app.boardEditMode = True
-        app.solutionBoard = copy.deepcopy(app.board)
-        app.initialVals = set()
-    app.selection = None
-    app.hoverSelection = None
-    app.hoverNumber = None
-    app.isGameOver = False
-    app.paused = False
-    app.mistakes = 0
-    app.showLegals = False
-    app.legalsBoard = findInitialLegalsBoard(app)
-    app.legalsEditMode = False # do this later
-    app.autoPlayOn = False
-
 def playScreen_redrawAll(app):
     drawBoard(app)
     drawNumberBoxes(app)
@@ -110,16 +45,17 @@ def drawGameOver(app):
         drawRect(app.boardLeft, app.boardTop, app.boardWidth, 
                 app.boardHeight, fill = 'black', opacity = 80)
         drawLabel('Invalid board!', app.width/2, app.height/2 - 100, size = 40, 
-                fill = 'white', bold = True)
+                fill = 'white', bold = True, font = 'monospace')
         drawLabel(f'Return home to try again', 
-                app.width/2, app.height/2 - 50, size = 30, fill = 'white')
+                app.width/2, app.height/2 - 50, size = 30, fill = 'white', font = 'monospace')
     elif app.solutionBoard == app.board:
         drawRect(app.boardLeft, app.boardTop, app.boardWidth, 
                 app.boardHeight, fill = 'black', opacity = 80)
         drawLabel('You won!', app.width/2, app.height/2 - 100, size = 40, 
-                fill = 'white', bold = True)
-        drawLabel(f'You made {app.mistakes} mistakes!', 
-                app.width/2, app.height/2 - 50, size = 30, fill = 'white')
+                fill = 'white', bold = True, font = 'monospace')
+        mistakePlural = 'mistake' if app.mistakes==1 else 'mistakes'
+        drawLabel(f'You made {app.mistakes} {mistakePlural}!', 
+                app.width/2, app.height/2 - 50, size = 30, fill = 'white', font = 'monospace')
 
 def drawNumberBoxes(app):
     cellWidth, cellHeight = getCellSize(app)
@@ -295,19 +231,10 @@ def playScreen_onMouseMove(app, mouseX, mouseY):
             app.hoverNumber = None
 
 def playScreen_onKeyPress(app, key):
-    if key == 'p' and app.selection != None:
-        #row, col = app.selection
-        #print(row, col, app.board[row][col])
-        print(app.level)
-    if key == 'a' and app.selection != None:
-        row, col = app.selection
-        leg = app.legalsBoard[row][col]
-        print("row, col, leg.legals", row, col, leg.legals)        
-        print("leg.manualLegals", leg.manualLegals)        
-        print("leg.manualIllegals",leg.manualIllegals)
-        print("all legals", leg.legals | leg.manualLegals) 
-        print("all illegals", leg.illegals | leg.manualIllegals)
-        print("shown legals", leg.shownLegals)
+    if key == 'h':
+        setActiveScreen('homeScreen')
+    if key == 'g':
+        setActiveScreen('helpScreen')
     if key == 'l':
         app.showLegals = not app.showLegals
     if key == 'e':
@@ -388,30 +315,8 @@ def getNumberFromBox(app, x, y):
     return None
 
 ##################################
-# FIND BOARD SOLUTION
+# FIND CELLS
 ##################################
-
-def solveSudoku(app, board):
-    board = copy.deepcopy(board) # is this bad
-    if findNextEmptyCellFromHere(app, board, -1, app.cols) == None:
-        return board
-    else:
-        row, col = findNextEmptyCellFromHere(app, board, -1, app.cols)
-        for i in range(1,10):
-            board[row][col] = str(i)
-            if isBoardLegal(app, board):
-                solution = solveSudoku(app, board) 
-                if solution != None:
-                    return solution
-            board[row][col] = '0'
-        return None
-
-def findNextEmptyCellFromHere(app, board, givenRow, givenCol):
-    for row in range(givenRow, app.rows):
-        for col in range(app.cols):
-            if board[row][col] == '0' and not (row == givenRow and col <= givenCol):
-                return row, col
-    return None
 
 def findNextEditableCellFromHere(app, givenRow, givenCol, dir):
     if dir == 'right':
@@ -449,45 +354,6 @@ def findNextSingletonCell(app, board, givenRow, givenCol):
         return findNextSingletonCell(app, app.board, row, col)
     return None
 
-def isBoardLegal(app, board):
-    for row in range(app.rows):
-        if not isLegalRow(board, row):
-            return False
-    for col in range(app.cols):
-        if not isLegalCol(board, col):
-            return False
-    blocks = app.rows
-    for block in range(blocks):
-        if not isLegalBlock(board, block):
-            return False
-    return True
-
-def areLegalValues(L):
-    seen = set()
-    for value in L:
-        if value != '0' and value in seen:
-            return False
-        seen.add(value)
-    return True
-
-def isLegalRow(board, row):
-    return areLegalValues(board[row])
-    
-def isLegalCol(board, col):
-    rows = len(board)
-    values = [board[row][col] for row in range(rows)]
-    return areLegalValues(values)
-
-def isLegalBlock(board, block):
-    blockSize = 3
-    startRow = block // blockSize * blockSize
-    startCol = block % blockSize * blockSize
-    values = []
-    for drow in range(blockSize):
-        for dcol in range(blockSize):
-            row, col = startRow + drow, startCol + dcol
-            values.append(board[row][col])
-    return areLegalValues(values)
 
 ##################################
 # PLAYER MOVES
@@ -513,7 +379,6 @@ def addNumber(app, number):
             cellLegals = app.legalsBoard[rowIndex][colIndex]
             if number == '0': # fix
                 if (rowIndex == row) or (colIndex == col) or (blockIndex == block) and not ((rowIndex == row) and (colIndex == col)):
-                    print(row, col, block)
                     if prevValue not in cellLegals.shownLegals and prevValue in cellLegals.legals:
                         cellLegals.manualIllegals.remove(prevValue)
                     cellLegals.shownLegals = (cellLegals.legals | cellLegals.manualLegals) - cellLegals.manualIllegals
@@ -522,75 +387,9 @@ def addNumber(app, number):
                     if number in cellLegals.legals and number in cellLegals.shownLegals:
                         cellLegals.manualIllegals.add(number)
                     cellLegals.shownLegals = (cellLegals.legals | cellLegals.manualLegals) - cellLegals.manualIllegals
-                    if prevValue in cellLegals.legals and number not in cellLegals.shownLegals:
+                    if prevValue != number and prevValue in cellLegals.legals and number not in cellLegals.shownLegals:
                         cellLegals.manualIllegals.remove(prevValue)
                     cellLegals.shownLegals = (cellLegals.legals | cellLegals.manualLegals) - cellLegals.manualIllegals
-
-                
-
-##################################
-# FIND LEGALS
-##################################
-
-def findInitialLegalsBoard(app):
-    board = [[None for v in range(app.rows)] for y in range(app.cols)]
-    for row in range(app.rows):
-        for col in range(app.cols):
-            block = row//3 * 3 + col//3
-            cellLegals = Legals(app.board, row, col, block)
-            board[row][col] = cellLegals
-            if app.board[row][col] != '0':
-                board[row][col].legals = {app.board[row][col]}
-    return board
-
-class Legals():
-    def __init__(self, board, row, col, block):
-        self.board = board
-        self.row = row
-        self.col = col
-        self.block = block
-        self.illegals = findValuesinRow(self.board, self.row) | findValuesinCol(self.board, self.col) | findValuesinBlock(self.board, self.block)
-        self.legals = {'1','2','3','4','5','6','7','8','9'} - self.illegals
-        self.manualLegals = set()
-        self.manualIllegals = set()
-        self.shownLegals = (self.legals | self.manualLegals) - self.manualIllegals
-
-def setAndBanLegals(cellLegals, key):
-    if key in cellLegals.manualLegals:
-        cellLegals.manualLegals.remove(key)
-    elif key in cellLegals.manualIllegals:
-        cellLegals.manualIllegals.remove(key)
-    elif key in cellLegals.legals:
-        cellLegals.manualIllegals.add(key)
-    elif key in cellLegals.illegals:
-        cellLegals.manualLegals.add(key)
-    cellLegals.shownLegals = (cellLegals.legals | cellLegals.manualLegals) - cellLegals.manualIllegals
-
-def findValues(L):
-    seen = set()
-    for value in L:
-        if value != '0':
-            seen.add(value)
-    return seen
-
-def findValuesinRow(board, row):
-    return findValues(board[row])
-    
-def findValuesinCol(board, col):
-    rows = len(board)
-    values = [board[row][col] for row in range(rows)]
-    return findValues(values)
-
-def findValuesinBlock(board, block):
-    blockSize = 3
-    startRow = block // blockSize * blockSize
-    startCol = block % blockSize * blockSize
-    values = []
-    for drow in range(blockSize):
-        for dcol in range(blockSize):
-            row, col = startRow + drow, startCol + dcol
-            values.append(board[row][col])
-    return findValues(values)
 
 ##################################
 # PROVIDE HINTS

@@ -13,19 +13,20 @@ def helpScreen_onScreenStart(app):
 
 def helpScreen_onKeyPress(app, key):
     if key == 'h': setActiveScreen('homeScreen')
+    if key == 'g' and (app.board != None): setActiveScreen('playScreen')
 
 def helpScreen_redrawAll(app):
     drawRect(app.boardLeft, app.boardTop, app.boardWidth, app.boardHeight,
             fill=None, border='gainsboro', borderWidth = app.boardBorderWidth)
     instructions = ['press h to return to the home page',
                     'press g to return to your game',
-                    'press l to toggle show legals',
-                    'press n to toggle edit legals',
-                    'press e to toggle initial board values',
                     'press s to use a hint (get a value)',
                     'press S to watch the solution (easy only)',
-                    'press keyboard arrows to move across the board',
-                    'press the backspace button to delete a move']
+                    'press e to toggle edit mode for initial board',
+                    'press l to toggle show legals',
+                    'press n to toggle edit mode for legals',
+                    'use keyboard arrows to move across the board',
+                    'use backspace to delete a number',]
     for i in range(len(instructions)):
         drawLabel(instructions[i], app.width/2, app.boardTop + 40 + i*40, size=20, font = 'monospace')
     drawRightSide(app)
@@ -39,7 +40,7 @@ def drawLeftSide(app):
     drawRect(app.boardLeftSide, app.boardTop + 200, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('home', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 200 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 280, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('game', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawLabel('resume', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
 
 def helpScreen_onMousePress(app, mouseX, mouseY):
     # left side
@@ -47,5 +48,6 @@ def helpScreen_onMousePress(app, mouseX, mouseY):
         (app.boardTop + 200 <= mouseY <= app.boardTop + 200 + app.buttonHeight)):
         setActiveScreen('homeScreen')
     elif ((app.boardLeftSide <= mouseX <= app.boardLeftSide + app.buttonWidth) and 
-        (app.boardTop + 280 <= mouseY <= app.boardTop + 280 + app.buttonHeight)):
+        (app.boardTop + 280 <= mouseY <= app.boardTop + 280 + app.buttonHeight) and
+        (app.board != None)):
         setActiveScreen('playScreen')
