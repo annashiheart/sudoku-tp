@@ -74,11 +74,17 @@ def playScreen_onScreenStart(app):
 
 def appStarted(app):
     # randomize this for level
-    app.level = 'easy'
-    newBoard = readFile(f'tp-starter-files/boards/{app.level}-{chooseRandomNumber(app)}.png.txt')
-    app.board = boardTo2DList(newBoard)
-    app.solutionBoard = solveSudoku(app, app.board)
-    app.initialVals = findInitialVals(app.board)
+    if app.level != 'custom':
+        newBoard = readFile(f'tp-starter-files/boards/{app.level}-{chooseRandomNumber(app)}.png.txt')
+        app.board = boardTo2DList(newBoard)
+        app.solutionBoard = solveSudoku(app, app.board)
+        app.initialVals = findInitialVals(app.board)
+        app.boardEditMode = False
+    else:
+        app.board = [['0' for v in range(app.cols)] for w in range(app.rows)]
+        app.boardEditMode = True
+        app.solutionBoard = copy.deepcopy(app.board)
+        app.initialVals = set()
     app.selection = None
     app.hoverSelection = None
     app.hoverNumber = None
@@ -100,12 +106,20 @@ def playScreen_redrawAll(app):
         drawGameOver(app) # change this to screen?
 
 def drawGameOver(app):
-    drawRect(app.boardLeft, app.boardTop, app.boardWidth, 
-            app.boardHeight, fill = 'black', opacity = 80)
-    drawLabel('You won!', app.width/2, app.height/2 - 100, size = 40, 
-            fill = 'white', bold = True)
-    drawLabel(f'You made {app.mistakes} mistakes!', 
-            app.width/2, app.height/2 - 50, size = 30, fill = 'white')
+    if app.solutionBoard == None:
+        drawRect(app.boardLeft, app.boardTop, app.boardWidth, 
+                app.boardHeight, fill = 'black', opacity = 80)
+        drawLabel('Invalid board!', app.width/2, app.height/2 - 100, size = 40, 
+                fill = 'white', bold = True)
+        drawLabel(f'Return home to try again', 
+                app.width/2, app.height/2 - 50, size = 30, fill = 'white')
+    elif app.solutionBoard == app.board:
+        drawRect(app.boardLeft, app.boardTop, app.boardWidth, 
+                app.boardHeight, fill = 'black', opacity = 80)
+        drawLabel('You won!', app.width/2, app.height/2 - 100, size = 40, 
+                fill = 'white', bold = True)
+        drawLabel(f'You made {app.mistakes} mistakes!', 
+                app.width/2, app.height/2 - 50, size = 30, fill = 'white')
 
 def drawNumberBoxes(app):
     cellWidth, cellHeight = getCellSize(app)
@@ -164,7 +178,9 @@ def drawCell(app, row, col):
 def drawCellNum(app, row, col, cellNum):
     cellLeft, cellTop = getCellLeftTop(app, row, col)
     cellWidth, cellHeight = getCellSize(app)
-    if cellNum == app.solutionBoard[row][col]:
+    if app.solutionBoard == None:
+        color = 'grey'
+    elif cellNum == app.solutionBoard[row][col]:
         color = 'black'
     else:
         color = 'red'
@@ -176,6 +192,9 @@ def drawRightSide(app):
     drawLabel(f'{app.mistakes}', app.boardRightSide + app.buttonWidth/2, app.boardTop + app.buttonHeight, fill='black', size = 28, font = 'monospace')
     drawRect(app.boardRightSide, app.boardTop + 130, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('delete', app.boardRightSide + app.buttonWidth/2, app.boardTop + 130 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    color = 'grey' if app.boardEditMode else 'lightGrey'
+    drawRect(app.boardRightSide, app.boardTop + 400, app.buttonWidth, app.buttonHeight, fill = color)
+    drawLabel('edit', app.boardRightSide + app.buttonWidth/2, app.boardTop + 400 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
     color = 'grey' if app.showLegals else 'lightGrey'
     drawRect(app.boardRightSide, app.boardTop + 475, app.buttonWidth, app.buttonHeight, fill = color)
     drawLabel('legals', app.boardRightSide + app.buttonWidth/2, app.boardTop + 475 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
@@ -217,8 +236,15 @@ def playScreen_onMousePress(app, mouseX, mouseY):
                 app.selection = None
         elif (selectedNum != None) and (app.selection != None):
             selectedNum = str(selectedNum)
+            # input custom board
+            if app.boardEditMode:
+                row, col = app.selection
+                app.solutionBoard[row][col] = selectedNum
+                app.board[row][col] = selectedNum
+                cellLegals = app.legalsBoard[row][col]
+                app.legalsBoard = findInitialLegalsBoard(app)
             # change legals
-            if app.legalsEditMode:
+            elif app.legalsEditMode:
                 row, col = app.selection
                 cellLegals = app.legalsBoard[row][col]
                 setAndBanLegals(cellLegals, selectedNum)
@@ -240,6 +266,13 @@ def playScreen_onMousePress(app, mouseX, mouseY):
         (app.boardRightSide <= mouseX <= app.boardRightSide + app.buttonWidth) and 
         (app.boardTop + 130 <= mouseY <= app.boardTop + 130 + app.buttonHeight)):
         addNumber(app, '0')
+    elif ((app.boardRightSide <= mouseX <= app.boardRightSide + app.buttonWidth) and 
+        (app.boardTop + 400 <= mouseY <= app.boardTop + 400 + app.buttonHeight)):
+        app.solutionBoard = solveSudoku(app, app.board)
+        if app.solutionBoard == None:
+            app.isGameOver = True
+        app.initialVals = findInitialVals(app.board)
+        app.boardEditMode = not app.boardEditMode
     elif ((app.boardRightSide <= mouseX <= app.boardRightSide + app.buttonWidth) and 
         (app.boardTop + 475 <= mouseY <= app.boardTop + 475 + app.buttonHeight)):
         app.showLegals = not app.showLegals
@@ -265,7 +298,7 @@ def playScreen_onKeyPress(app, key):
     if key == 'p' and app.selection != None:
         #row, col = app.selection
         #print(row, col, app.board[row][col])
-        print(app.legalsEditMode)
+        print(app.level)
     if key == 'a' and app.selection != None:
         row, col = app.selection
         leg = app.legalsBoard[row][col]
@@ -277,6 +310,12 @@ def playScreen_onKeyPress(app, key):
         print("shown legals", leg.shownLegals)
     if key == 'l':
         app.showLegals = not app.showLegals
+    if key == 'e':
+        app.solutionBoard = solveSudoku(app, app.board)
+        if app.solutionBoard == None:
+            app.isGameOver = True
+        app.initialVals = findInitialVals(app.board)
+        app.boardEditMode = not app.boardEditMode
     if key == 's':
         hint1(app)
     if key == 'S': # check this later
@@ -288,14 +327,24 @@ def playScreen_onKeyPress(app, key):
         if key in {'right', 'left', 'up', 'down'}:
             app.selection = findNextEditableCellFromHere(app, row, col, key)
         if key in '123456789':
-            if app.legalsEditMode:
+            if app.boardEditMode:
+                row, col = app.selection
+                app.solutionBoard[row][col] = key
+                app.board[row][col] = key
+                cellLegals = app.legalsBoard[row][col]
+                app.legalsBoard = findInitialLegalsBoard(app)
+            elif app.legalsEditMode:
                 row, col = app.selection
                 cellLegals = app.legalsBoard[row][col]
                 setAndBanLegals(cellLegals, key)
             else:
                 addNumber(app, key)
         if key == 'backspace':
-            if not app.legalsEditMode:
+            if app.boardEditMode:
+                row, col = app.selection
+                app.solutionBoard[row][col] = '0'
+                app.board[row][col] = '0'
+            elif not app.legalsEditMode:
                 addNumber(app, '0')
     if app.selection == None:
         if key == 'right':

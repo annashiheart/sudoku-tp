@@ -19,8 +19,9 @@ def helpScreen_redrawAll(app):
             fill=None, border='gainsboro', borderWidth = app.boardBorderWidth)
     instructions = ['press h to return to the home page',
                     'press g to return to your game',
-                    'press l to show legals',
-                    'press n to edit legals',
+                    'press l to toggle show legals',
+                    'press n to toggle edit legals',
+                    'press e to toggle initial board values',
                     'press s to use a hint (get a value)',
                     'press S to watch the solution (easy only)',
                     'press keyboard arrows to move across the board',
@@ -39,7 +40,6 @@ def drawLeftSide(app):
     drawLabel('home', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 200 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 280, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('game', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
-
 
 def helpScreen_onMousePress(app, mouseX, mouseY):
     # left side

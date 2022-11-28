@@ -2,8 +2,8 @@ try: from cmu_cs3_graphics import *
 except: from cmu_graphics import *
 
 from runAppWithScreens import *
-from playScreen import * 
 from homeScreen import *
+from playScreen import * 
 from helpScreen import *
 
 ##################################

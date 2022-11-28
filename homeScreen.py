@@ -7,6 +7,7 @@ from runAppWithScreens import *
 # homeScreen
 ##################################
 
+
 def homeScreen_onScreenStart(app):
     app.width = 1200
     app.height = 800
@@ -14,7 +15,7 @@ def homeScreen_onScreenStart(app):
     app.largeButtonHeight = 75
     app.smallButtonWidth = 120
     app.smallButtonHeight = 50
-    app.level = None
+    app.level = 'custom'
 
 def homeScreen_onKeyPress(app, key):
     if key == 's': setActiveScreen('playScreen')
@@ -34,24 +35,37 @@ def homeScreen_redrawAll(app):
     drawLabel('hard', app.width/2 + 0.5*app.smallButtonWidth + 12, 450, size=24, font = 'monospace')
     drawLabel('evil', app.width/2 + 1.5*app.smallButtonWidth + 36, 450, size=24, font = 'monospace')
 
-    # go to game
     drawRect(app.width/2 - app.largeButtonWidth/2, 550, app.largeButtonWidth, app.largeButtonHeight, fill = 'gainsboro')
     drawLabel('resume game', app.width/2, 550 + app.largeButtonHeight/2, size=48, font = 'monospace')
     # go to help
     drawRect(app.width/2 - app.largeButtonWidth/2, 650, app.largeButtonWidth, app.largeButtonHeight, fill = 'gainsboro')
-    drawLabel('build your own board', app.width/2, 650 + app.largeButtonHeight/2, size=48, font = 'monospace')
+    drawLabel('create board', app.width/2, 650 + app.largeButtonHeight/2, size=48, font = 'monospace')
 
 def homeScreen_onMousePress(app, mouseX, mouseY):
     # new game
     if ((app.width/2 - 2*app.smallButtonWidth - 36 <= mouseX <= app.width/2 - app.smallButtonWidth - 36) and 
         (425 <= mouseY <= 425 + app.smallButtonHeight)):
+        app.level = 'easy'
         setActiveScreen('playScreen')
-    # open help
+    if ((app.width/2 - app.smallButtonWidth - 12 <= mouseX <= app.width/2 - 12) and 
+        (425 <= mouseY <= 425 + app.smallButtonHeight)):
+        app.level = 'medium'
+        setActiveScreen('playScreen')
+    if ((app.width/2 + 12 <= mouseX <= app.width/2 + app.smallButtonWidth + 12) and 
+        (425 <= mouseY <= 425 + app.smallButtonHeight)):
+        app.level = 'hard'
+        setActiveScreen('playScreen')
+    if ((app.width/2 + app.smallButtonWidth + 36 <= mouseX <= app.width/2 + 2*app.smallButtonWidth + 36) and 
+        (425 <= mouseY <= 425 + app.smallButtonHeight)):
+        app.level = 'evil'
+        setActiveScreen('playScreen')
+    # resume
     if ((app.width/2 - app.largeButtonWidth/2 <= mouseX <= app.width/2 + app.largeButtonWidth/2) and 
         (550 <= mouseY <= 550 + app.largeButtonHeight)):
         setActiveScreen('playScreen')
     
-    # make your own
+    # new
     if ((app.width/2 - app.largeButtonWidth/2 <= mouseX <= app.width/2 + app.largeButtonWidth/2) and 
         (650 <= mouseY <= 650 + app.largeButtonHeight)):
+        app.level = 'custom'
         setActiveScreen('playScreen')
