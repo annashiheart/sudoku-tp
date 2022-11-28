@@ -3,6 +3,12 @@ import math
 import random
 import copy
 
+from runAppWithScreens import *
+
+##################################
+# playScreen
+##################################
+
 ##################################
 # FOR DEBUGGING
 ##################################
@@ -68,7 +74,7 @@ def playScreen_onScreenStart(app):
 
 def appStarted(app):
     # randomize this for level
-    app.level = 'evil'
+    app.level = 'easy'
     newBoard = readFile(f'tp-starter-files/boards/{app.level}-{chooseRandomNumber(app)}.png.txt')
     app.board = boardTo2DList(newBoard)
     app.solutionBoard = solveSudoku(app, app.board)
@@ -112,17 +118,10 @@ def drawNumberBoxes(app):
         drawLabel(i+1, app.boardLeft + i*(app.boardWidth/9) + cellWidth/2, 
                 app.boardTop + app.boardHeight + 20 + cellHeight/2, size = 28,
                 bold = True, font = 'monospace')
-    # draw border for number boxes
+    # draw border 
     drawRect(app.boardLeft, app.boardTop + app.boardHeight + 20,
             app.boardWidth, app.boardHeight/9, fill = None, border = 'black',
             borderWidth = app.cellBorderWidth)
-    # draw delete symbol
-    # crossSymbol = chr(0x2715)
-    drawRect(app.boardLeft + 9.5 * (app.boardWidth/9), app.boardTop + app.boardHeight + 20, 
-            app.boardWidth/9, app.boardHeight/9, 
-            fill = 'gainsboro', border = 'black', borderWidth = app.cellBorderWidth)
-    drawLabel('X', app.boardLeft + 9.5*(app.boardWidth/9) + cellWidth/2, 
-            app.boardTop + app.boardHeight + 20 + cellHeight/2, size = 28, font='symbols')
                 
 def drawBoard(app):
     for row in range(app.rows):
@@ -165,7 +164,6 @@ def drawCell(app, row, col):
 def drawCellNum(app, row, col, cellNum):
     cellLeft, cellTop = getCellLeftTop(app, row, col)
     cellWidth, cellHeight = getCellSize(app)
-    # change number color if right or wrong
     if cellNum == app.solutionBoard[row][col]:
         color = 'black'
     else:
@@ -177,7 +175,11 @@ def drawRightSide(app):
     drawRect(app.boardRightSide, app.boardTop, app.buttonWidth, 2*app.buttonHeight, fill = 'lightGrey')
     drawLabel(f'{app.mistakes}', app.boardRightSide + app.buttonWidth/2, app.boardTop + app.buttonHeight, fill='black', size = 28, font = 'monospace')
     drawRect(app.boardRightSide, app.boardTop + 130, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('hint', app.boardRightSide + app.buttonWidth/2, app.boardTop + 130 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawLabel('delete', app.boardRightSide + app.buttonWidth/2, app.boardTop + 130 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawRect(app.boardRightSide, app.boardTop + 475, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
+    drawLabel('legals', app.boardRightSide + app.buttonWidth/2, app.boardTop + 475 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawRect(app.boardRightSide, app.boardTop + 550, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
+    drawLabel('notes', app.boardRightSide + app.buttonWidth/2, app.boardTop + 550 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
 
 def drawLeftSide(app):
     drawRect(app.boardLeftSide, app.boardTop + 200, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
@@ -185,7 +187,7 @@ def drawLeftSide(app):
     drawRect(app.boardLeftSide, app.boardTop + 280, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('help', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 360, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('legals', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawLabel('hint', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
 
 def drawLegals(app, row, col):
     cellLeft, cellTop = getCellLeftTop(app, row, col)
@@ -211,15 +213,37 @@ def playScreen_onMousePress(app, mouseX, mouseY):
                 app.selection = selectedCell
             else:
                 app.selection = None
-        # fill cell by mouse
         elif (selectedNum != None) and (app.selection != None):
             selectedNum = str(selectedNum)
-            addNumber(app, selectedNum)
-        # delete number by mouse
-        elif ((app.selection != None) and
-            (app.boardLeft + 9.5 * (app.boardWidth/9) <= mouseX <= app.boardLeft + 10.5 * (app.boardWidth/9)) and 
-            (app.boardTop + app.boardHeight + 20 <= mouseY <= app.boardTop + app.boardHeight + 20 + app.boardHeight/9)):
-            addNumber(app, '0')
+            # change legals
+            if app.legalsEditMode:
+                row, col = app.selection
+                cellLegals = app.legalsBoard[row][col]
+                setAndBanLegals(cellLegals, selectedNum)
+            # input actual value
+            else:
+                addNumber(app, selectedNum)
+    # left side
+    if ((app.boardLeftSide <= mouseX <= app.boardLeftSide + app.buttonWidth) and 
+        (app.boardTop + 200 <= mouseY <= app.boardTop + 200 + app.buttonHeight)):
+        setActiveScreen('homeScreen')
+    elif ((app.boardLeftSide <= mouseX <= app.boardLeftSide + app.buttonWidth) and 
+        (app.boardTop + 280 <= mouseY <= app.boardTop + 280 + app.buttonHeight)):
+        setActiveScreen('helpScreen')
+    elif ((app.boardLeftSide <= mouseX <= app.boardLeftSide + app.buttonWidth) and 
+        (app.boardTop + 360 <= mouseY <= app.boardTop + 360 + app.buttonHeight)):
+        hint1(app)
+    # right side
+    elif ((app.selection != None) and
+        (app.boardRightSide <= mouseX <= app.boardRightSide + app.buttonWidth) and 
+        (app.boardTop + 130 <= mouseY <= app.boardTop + 130 + app.buttonHeight)):
+        addNumber(app, '0')
+    elif ((app.boardRightSide <= mouseX <= app.boardRightSide + app.buttonWidth) and 
+        (app.boardTop + 475 <= mouseY <= app.boardTop + 475 + app.buttonHeight)):
+        app.showLegals = not app.showLegals
+    elif ((app.boardRightSide <= mouseX <= app.boardRightSide + app.buttonWidth) and 
+        (app.boardTop + 550 <= mouseY <= app.boardTop + 550 + app.buttonHeight)):
+        app.legalsEditMode = not app.legalsEditMode
 
 def playScreen_onMouseMove(app, mouseX, mouseY):
     if not app.isGameOver:
@@ -239,28 +263,35 @@ def playScreen_onKeyPress(app, key):
     if key == 'p' and app.selection != None:
         #row, col = app.selection
         #print(row, col, app.board[row][col])
-        print(app.level)
+        print(app.legalsEditMode)
     if key == 'a' and app.selection != None:
         row, col = app.selection
         leg = app.legalsBoard[row][col]
-        print(row, col, leg.legals)        
-        print(leg.manualLegals)        
-        print(leg.manualIllegals)
-        print(leg.legals | leg.manualLegals) 
-        print(leg.illegals | leg.manualIllegals)
-        print(leg.shownLegals)
+        print("row, col, leg.legals", row, col, leg.legals)        
+        print("leg.manualLegals", leg.manualLegals)        
+        print("leg.manualIllegals",leg.manualIllegals)
+        print("all legals", leg.legals | leg.manualLegals) 
+        print("all illegals", leg.illegals | leg.manualIllegals)
+        print("shown legals", leg.shownLegals)
     if key == 'l':
         app.showLegals = not app.showLegals
     if key == 's':
         hint1(app)
     if key == 'S': # check this later
         app.autoPlayOn = not app.autoPlayOn
+    if key == 'n':
+        app.legalsEditMode = not app.legalsEditMode 
     if app.selection != None:
         row, col = app.selection
-        if key == 'right':
-            app.selection = findNextEmptyCellFromHere(app, app.board, row, col)
+        if key in {'right', 'left', 'up', 'down'}:
+            app.selection = findNextEditableCellFromHere(app, row, col, key)
         if key in '123456789':
-            addNumber(app, key)
+            if app.legalsEditMode:
+                row, col = app.selection
+                cellLegals = app.legalsBoard[row][col]
+                setAndBanLegals(cellLegals, key)
+            else:
+                addNumber(app, key)
         if key == 'backspace':
             addNumber(app, '0')
     if app.selection == None:
@@ -330,10 +361,32 @@ def findNextEmptyCellFromHere(app, board, givenRow, givenCol):
                 return row, col
     return None
 
+def findNextEditableCellFromHere(app, givenRow, givenCol, dir):
+    if dir == 'right':
+        for row in range(givenRow, app.rows):
+            for col in range(app.cols):
+                if (row, col) not in app.initialVals and not (row == givenRow and col <= givenCol):
+                    return row, col
+    elif dir == 'left':
+        for row in range(givenRow, -1, -1):
+            for col in range(app.cols, -1, -1):
+                if (row, col) not in app.initialVals and not (row == givenRow and col >= givenCol):
+                    return row, col
+    elif dir == 'up':
+        for col in range(givenCol, -1, -1):
+            for row in range(app.rows, -1, -1):
+                if (row, col) not in app.initialVals and not (row >= givenRow and col == givenCol):
+                    return row, col
+    elif dir == 'down':
+        for col in range(givenCol, app.cols):
+            for row in range(app.rows):
+                if (row, col) not in app.initialVals and not (row <= givenRow and col == givenCol):
+                    return row, col
+    return None
+
 def findNextSingletonCell(app, board, givenRow, givenCol):
     app.selection = findNextEmptyCellFromHere(app, app.board, givenRow, givenCol)
     if app.selection == None:
-        print('aha!') 
         return None
     row, col = app.selection
     cellLegals = app.legalsBoard[row][col]
@@ -405,11 +458,20 @@ def addNumber(app, number):
             blockIndex = rowIndex//3 * 3 + colIndex//3
             cellLegals = app.legalsBoard[rowIndex][colIndex]
             if number == '0': # fix
-                if (rowIndex == row) or (colIndex == col) or (blockIndex == block):
-                    cellLegals.setLegal(prevValue)
+                if (rowIndex == row) or (colIndex == col) or (blockIndex == block) and not ((rowIndex == row) and (colIndex == col)):
+                    print(row, col, block)
+                    if prevValue not in cellLegals.shownLegals and prevValue in cellLegals.legals:
+                        cellLegals.manualIllegals.remove(prevValue)
+                    cellLegals.shownLegals = (cellLegals.legals | cellLegals.manualLegals) - cellLegals.manualIllegals
             else:
-                if ((rowIndex == row) or (colIndex == col) or (blockIndex == block)) and not ((rowIndex == row) and (colIndex == col)):
-                    cellLegals.banLegal(number)
+                if ((rowIndex == row) or (colIndex == col) or (blockIndex == block)) and not ((rowIndex == row) and (colIndex == col)) :
+                    if number in cellLegals.legals and number in cellLegals.shownLegals:
+                        cellLegals.manualIllegals.add(number)
+                    if prevValue in cellLegals.legals and number not in cellLegals.shownLegals:
+                        cellLegals.manualIllegals.remove(prevValue)
+                    cellLegals.shownLegals = (cellLegals.legals | cellLegals.manualLegals) - cellLegals.manualIllegals
+
+                
 
 ##################################
 # FIND LEGALS
@@ -436,22 +498,18 @@ class Legals():
         self.legals = {'1','2','3','4','5','6','7','8','9'} - self.illegals
         self.manualLegals = set()
         self.manualIllegals = set()
-        self.shownLegals = self.legals | self.manualLegals - self.manualIllegals
-    
-    def printLegals(self):
-        print(self.legals)
-    
-    def setLegal(self, num):
-        self.manualLegals.add(num)
-        if num in self.manualIllegals:
-            self.manualIllegals.remove(num)
-        self.shownLegals = (self.legals | self.manualLegals) - (self.illegals | self.manualIllegals)
+        self.shownLegals = (self.legals | self.manualLegals) - self.manualIllegals
 
-    def banLegal(self, num):
-        if num in self.manualLegals:
-            self.manualLegals.remove(num)
-        self.manualIllegals.add(num)
-        self.shownLegals = (self.legals | self.manualLegals) - (self.illegals | self.manualIllegals)
+def setAndBanLegals(cellLegals, key):
+    if key in cellLegals.manualLegals:
+        cellLegals.manualLegals.remove(key)
+    elif key in cellLegals.manualIllegals:
+        cellLegals.manualIllegals.remove(key)
+    elif key in cellLegals.legals:
+        cellLegals.manualIllegals.add(key)
+    elif key in cellLegals.illegals:
+        cellLegals.manualLegals.add(key)
+    cellLegals.shownLegals = (cellLegals.shownLegals | cellLegals.manualLegals) - cellLegals.manualIllegals
 
 def findValues(L):
     seen = set()

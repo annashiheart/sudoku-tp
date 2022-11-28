@@ -34,9 +34,12 @@ def homeScreen_redrawAll(app):
     drawLabel('hard', app.width/2 + 0.5*app.smallButtonWidth + 12, 450, size=24, font = 'monospace')
     drawLabel('evil', app.width/2 + 1.5*app.smallButtonWidth + 36, 450, size=24, font = 'monospace')
 
-    # go to help
+    # go to game
     drawRect(app.width/2 - app.largeButtonWidth/2, 550, app.largeButtonWidth, app.largeButtonHeight, fill = 'gainsboro')
-    drawLabel('how to play', app.width/2, 550 + app.largeButtonHeight/2, size=48, font = 'monospace')
+    drawLabel('resume game', app.width/2, 550 + app.largeButtonHeight/2, size=48, font = 'monospace')
+    # go to help
+    drawRect(app.width/2 - app.largeButtonWidth/2, 650, app.largeButtonWidth, app.largeButtonHeight, fill = 'gainsboro')
+    drawLabel('build your own board', app.width/2, 650 + app.largeButtonHeight/2, size=48, font = 'monospace')
 
 def homeScreen_onMousePress(app, mouseX, mouseY):
     # new game
@@ -46,4 +49,9 @@ def homeScreen_onMousePress(app, mouseX, mouseY):
     # open help
     if ((app.width/2 - app.largeButtonWidth/2 <= mouseX <= app.width/2 + app.largeButtonWidth/2) and 
         (550 <= mouseY <= 550 + app.largeButtonHeight)):
-        setActiveScreen('helpScreen')
+        setActiveScreen('playScreen')
+    
+    # make your own
+    if ((app.width/2 - app.largeButtonWidth/2 <= mouseX <= app.width/2 + app.largeButtonWidth/2) and 
+        (650 <= mouseY <= 650 + app.largeButtonHeight)):
+        setActiveScreen('playScreen')
