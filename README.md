@@ -1,9 +1,9 @@
 # Sudoku
 ## 15-112 Term Project
 
-Part 1: in progress!
+Part 1: completed!
 
-Part 2: not started.
+Part 2: in progress!
 
 Part 3: not started.
 
@@ -19,6 +19,8 @@ Board drawing functions adapted from exercises in Animations With 2D Lists (5.3)
 
 Backtracking code (solveSudoku) adapted from solveMiniSudoku (8.11) and isLegalSudoku (4.5).
 
-## Acknowledgements
+Code for reading and choosing files adapted from Term Project Guide.
 
-Guide: https://www.cs.cmu.edu/~112-3/notes/term-project.html
+Preloaded Sudoku files from Term Project Guide.
+
+Term Project Guide: https://www.cs.cmu.edu/~112-3/notes/term-project.html

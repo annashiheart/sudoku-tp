@@ -18,25 +18,43 @@ def homeScreen_onScreenStart(app):
     app.smallButtonHeight = 50
     app.level = None
     app.board = None
+    app.inputTextMode = False
+    app.inputText = ''
 
 def homeScreen_onKeyPress(app, key):
-    if key == 'e': 
+    if app.inputTextMode: 
+        if key == 'backspace':
+            app.inputText = app.inputText[:-1]
+        elif key != 'enter':
+            app.inputText += key
+        elif key == 'enter':
+            app.inputTextMode = False
+            newBoard = readFile(f'tp-starter-files/boards/{app.inputText}.png.txt')
+            app.board = boardTo2DList(newBoard)
+            app.solutionBoard = solveSudoku(app, app.board)
+            app.initialVals = findInitialVals(app.board)
+            app.boardEditMode = False
+            app.legalsBoard = findInitialLegalsBoard(app)
+            appStarted(app)
+            setActiveScreen('playScreen')
+
+    elif key == 'e': 
         app.level = 'easy'
         createBoard(app)
         setActiveScreen('playScreen')
-    if key == 'm': 
+    elif key == 'm': 
         app.level = 'medium'
         createBoard(app)
         setActiveScreen('playScreen')
-    if key == 'h': 
+    elif key == 'h': 
         app.level = 'hard'
         createBoard(app)
         setActiveScreen('playScreen')
-    if key == 'v': 
+    elif key == 'v': 
         app.level = 'evil'
         createBoard(app)
         setActiveScreen('playScreen')
-    if key == 'c': 
+    elif key == 'c': 
         app.level = 'custom'
         createBoard(app)
         setActiveScreen('playScreen')
@@ -45,71 +63,84 @@ def homeScreen_onKeyPress(app, key):
 
 
 def homeScreen_redrawAll(app):
-    drawLabel('sudoku', app.width/2, 250, size=140, font = 'monospace',)
-    drawRect(app.width/2 - app.largeButtonWidth/2, 350, app.largeButtonWidth, 2*app.largeButtonHeight, fill = 'gainsboro')
+    drawLabel('sudoku', app.width/2, 150, size=140, font = 'monospace',)
+    drawRect(app.width/2 - app.largeButtonWidth/2, 250, app.largeButtonWidth, 2*app.largeButtonHeight, fill = 'gainsboro')
 
     # go to play
-    drawLabel('new game', app.width/2, 350 + app.largeButtonHeight/2, size=48, font = 'monospace')
-    drawRect(app.width/2 - 2*app.smallButtonWidth - 36, 425, app.smallButtonWidth, app.smallButtonHeight, fill = 'whiteSmoke')
-    drawRect(app.width/2 - app.smallButtonWidth - 12, 425, app.smallButtonWidth, app.smallButtonHeight, fill = 'whiteSmoke')
-    drawRect(app.width/2 + 12, 425, app.smallButtonWidth, app.smallButtonHeight, fill = 'whiteSmoke')
-    drawRect(app.width/2 + app.smallButtonWidth + 36, 425, app.smallButtonWidth, app.smallButtonHeight, fill = 'whiteSmoke')
-    drawLabel('easy(e)', app.width/2 - 1.5*app.smallButtonWidth - 36, 450, size=20, font = 'monospace')
-    drawLabel('medium(m)', app.width/2 - 0.5*app.smallButtonWidth - 12, 450, size=20, font = 'monospace')
-    drawLabel('hard(d)', app.width/2 + 0.5*app.smallButtonWidth + 12, 450, size=20, font = 'monospace')
-    drawLabel('evil(v)', app.width/2 + 1.5*app.smallButtonWidth + 36, 450, size=20, font = 'monospace')
+    drawLabel('new game', app.width/2, 250 + app.largeButtonHeight/2, size=48, font = 'monospace')
+    drawRect(app.width/2 - 2*app.smallButtonWidth - 36, 325, app.smallButtonWidth, app.smallButtonHeight, fill = 'whiteSmoke')
+    drawRect(app.width/2 - app.smallButtonWidth - 12, 325, app.smallButtonWidth, app.smallButtonHeight, fill = 'whiteSmoke')
+    drawRect(app.width/2 + 12, 325, app.smallButtonWidth, app.smallButtonHeight, fill = 'whiteSmoke')
+    drawRect(app.width/2 + app.smallButtonWidth + 36, 325, app.smallButtonWidth, app.smallButtonHeight, fill = 'whiteSmoke')
+    drawLabel('easy(e)', app.width/2 - 1.5*app.smallButtonWidth - 36, 350, size=20, font = 'monospace')
+    drawLabel('medium(m)', app.width/2 - 0.5*app.smallButtonWidth - 12, 350, size=20, font = 'monospace')
+    drawLabel('hard(d)', app.width/2 + 0.5*app.smallButtonWidth + 12, 350, size=20, font = 'monospace')
+    drawLabel('evil(v)', app.width/2 + 1.5*app.smallButtonWidth + 36, 350, size=20, font = 'monospace')
 
-    # resume game
-    drawRect(app.width/2 - app.largeButtonWidth/2, 520, app.largeButtonWidth, app.largeButtonHeight, fill = 'gainsboro')
-    drawLabel('resume game (r)', app.width/2, 520 + app.largeButtonHeight/2, size=48, font = 'monospace')
+    # create game
+    drawRect(app.width/2 - app.largeButtonWidth/2, 420, 2*app.smallButtonWidth + 48, app.largeButtonHeight, fill = 'gainsboro')
+    drawLabel('create (r)', app.width/2 - app.smallButtonWidth - 36, 420 + app.largeButtonHeight/2, size=30, font = 'monospace')
+
+    # upload game
+    drawRect(app.width/2 + 12, 420, 2*app.smallButtonWidth + 48, app.largeButtonHeight, fill = 'gainsboro')
+    drawLabel('upload (u)', app.width/2 + 36 + app.smallButtonWidth, 420 + app.largeButtonHeight/2, size=30, font = 'monospace')
     
-    # create board
-    drawRect(app.width/2 - app.largeButtonWidth/2, 615, app.largeButtonWidth, app.largeButtonHeight, fill = 'gainsboro')
-    drawLabel('create board (c)', app.width/2, 615 + app.largeButtonHeight/2, size=48, font = 'monospace')
+    if app.inputTextMode:
+        drawRect(app.width/2 - app.largeButtonWidth/2, 610, app.largeButtonWidth, app.largeButtonHeight, fill = 'gainsboro')
+        drawLabel('write level-number:', app.width/2, 635, size=20, font = 'monospace')
+        drawLabel(app.inputText, app.width/2, 665, size=20, font = 'monospace')
+
+    # resume board
+    drawRect(app.width/2 - app.largeButtonWidth/2, 515, 2*app.smallButtonWidth + 48, app.largeButtonHeight, fill = 'gainsboro')
+    drawLabel('resume (c)', app.width/2 - app.smallButtonWidth - 36, 515 + app.largeButtonHeight/2, size=30, font = 'monospace')
 
     # go to help
-    drawRect(app.width/2 - app.largeButtonWidth/2, 710, app.largeButtonWidth, app.largeButtonHeight, fill = 'gainsboro')
-    drawLabel('how to play (g)', app.width/2, 710 + app.largeButtonHeight/2, size=48, font = 'monospace')
+    drawRect(app.width/2 + 12, 515, 2*app.smallButtonWidth + 48, app.largeButtonHeight, fill = 'gainsboro')
+    drawLabel('guide (g)', app.width/2 + 36 + app.smallButtonWidth, 515 + app.largeButtonHeight/2, size=30, font = 'monospace')
 
 
 def homeScreen_onMousePress(app, mouseX, mouseY):
     # new game
     if ((app.width/2 - 2*app.smallButtonWidth - 36 <= mouseX <= app.width/2 - app.smallButtonWidth - 36) and 
-        (425 <= mouseY <= 425 + app.smallButtonHeight)):
+        (325 <= mouseY <= 325 + app.smallButtonHeight)):
         app.level = 'easy'
         createBoard(app)
         setActiveScreen('playScreen')
     elif ((app.width/2 - app.smallButtonWidth - 12 <= mouseX <= app.width/2 - 12) and 
-        (425 <= mouseY <= 425 + app.smallButtonHeight)):
+        (325 <= mouseY <= 325 + app.smallButtonHeight)):
         app.level = 'medium'
         createBoard(app)
         setActiveScreen('playScreen')
     elif ((app.width/2 + 12 <= mouseX <= app.width/2 + app.smallButtonWidth + 12) and 
-        (425 <= mouseY <= 425 + app.smallButtonHeight)):
+        (325 <= mouseY <= 325 + app.smallButtonHeight)):
         app.level = 'hard'
         createBoard(app)
         setActiveScreen('playScreen')
     elif ((app.width/2 + app.smallButtonWidth + 36 <= mouseX <= app.width/2 + 2*app.smallButtonWidth + 36) and 
-        (425 <= mouseY <= 425 + app.smallButtonHeight)):
+        (325 <= mouseY <= 325 + app.smallButtonHeight)):
         app.level = 'evil'
         createBoard(app)
         setActiveScreen('playScreen')
-    # resume
-    elif ((app.width/2 - app.largeButtonWidth/2 <= mouseX <= app.width/2 + app.largeButtonWidth/2) and 
-        (520 <= mouseY <= 520 + app.largeButtonHeight)):
-        if app.board != None:
-            setActiveScreen('playScreen')
-    
-    # new
-    if ((app.width/2 - app.largeButtonWidth/2 <= mouseX <= app.width/2 + app.largeButtonWidth/2) and 
-        (615 <= mouseY <= 615 + app.largeButtonHeight)):
+
+    # create
+    if ((app.width/2 - app.largeButtonWidth/2 <= mouseX <= app.width/2 - app.largeButtonWidth/2 + 2*app.smallButtonWidth + 48) and 
+        (420 <= mouseY <= 420 + app.largeButtonHeight)):
         app.level = 'custom'
         createBoard(app)
         setActiveScreen('playScreen')
-
-    if ((app.width/2 - app.largeButtonWidth/2 <= mouseX <= app.width/2 + app.largeButtonWidth/2) and 
-        (710 <= mouseY <= 710 + app.largeButtonHeight)):
-        setActiveScreen('helpScreen')
+    # upload
+    elif ((app.width/2 + 12 <= mouseX <= app.width/2 + 60 + 2*app.smallButtonWidth) and 
+        (420 <= mouseY <= 420 + app.largeButtonHeight)):
+        app.inputTextMode = True
+    # resume
+    elif ((app.width/2 - app.largeButtonWidth/2 <= mouseX <= app.width/2 - app.largeButtonWidth/2 +  2*app.smallButtonWidth + 48) and 
+        (515 <= mouseY <= 515 + app.largeButtonHeight)):
+        if app.board != None:
+            setActiveScreen('playScreen')
+    # guide
+    if ((app.width/2 + 12 <= mouseX <= app.width/2 + 60 + 2*app.smallButtonWidth) and 
+        (515 <= mouseY <= 515 + app.largeButtonHeight)):
+        setActiveScreen('helpScreen') 
 
 ##################################
 # CHOOSE AND READ FILE
