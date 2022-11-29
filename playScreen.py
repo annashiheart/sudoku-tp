@@ -144,7 +144,9 @@ def drawLeftSide(app):
     drawRect(app.boardLeftSide, app.boardTop + 280, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('help', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 360, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('hint', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawLabel('autoplay', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawRect(app.boardLeftSide, app.boardTop + 440, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
+    drawLabel('hint', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 440 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
 
 def drawLegals(app, row, col):
     cellLeft, cellTop = getCellLeftTop(app, row, col)
@@ -196,7 +198,11 @@ def playScreen_onMousePress(app, mouseX, mouseY):
         setActiveScreen('helpScreen')
     elif ((app.boardLeftSide <= mouseX <= app.boardLeftSide + app.buttonWidth) and 
         (app.boardTop + 360 <= mouseY <= app.boardTop + 360 + app.buttonHeight)):
-        hint1(app)
+        hint1(app, True)
+    elif ((app.boardLeftSide <= mouseX <= app.boardLeftSide + app.buttonWidth) and 
+        (app.boardTop + 440 <= mouseY <= app.boardTop + 440 + app.buttonHeight)):
+        hint1(app, False)
+
     # right side
     elif ((app.selection != None) and
         (app.boardRightSide <= mouseX <= app.boardRightSide + app.buttonWidth) and 
@@ -244,7 +250,7 @@ def playScreen_onKeyPress(app, key):
         app.initialVals = findInitialVals(app.board)
         app.boardEditMode = not app.boardEditMode
     if key == 's':
-        hint1(app)
+        hint1(app, False)
     if key == 'S': # check this later
         app.autoPlayOn = not app.autoPlayOn
     if key == 'n':
@@ -279,7 +285,7 @@ def playScreen_onKeyPress(app, key):
 
 def playScreen_onStep(app):
     if app.autoPlayOn:
-        hint1(app)
+        hint1(app, True)
         
 ##################################
 # ANIMATION CONTROLLER
@@ -395,7 +401,7 @@ def addNumber(app, number):
 # PROVIDE HINTS
 ##################################
 
-def hint1(app):
+def hint1(app, setValue):
     if app.selection == None:
         row, col = -1, app.cols
     else:
@@ -403,6 +409,7 @@ def hint1(app):
     if findNextSingletonCell(app, app.board, row, col) != None:
         singletonRow, singletonCol, value = findNextSingletonCell(app, app.board, row, col)
         app.selection = singletonRow, singletonCol
+    if setValue:
         addNumber(app, value)
 
 def hint2(app): # to do later

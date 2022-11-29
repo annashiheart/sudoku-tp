@@ -79,7 +79,7 @@ def homeScreen_redrawAll(app):
 
     # create game
     drawRect(app.width/2 - app.largeButtonWidth/2, 420, 2*app.smallButtonWidth + 48, app.largeButtonHeight, fill = 'gainsboro')
-    drawLabel('create (r)', app.width/2 - app.smallButtonWidth - 36, 420 + app.largeButtonHeight/2, size=30, font = 'monospace')
+    drawLabel('create (c)', app.width/2 - app.smallButtonWidth - 36, 420 + app.largeButtonHeight/2, size=30, font = 'monospace')
 
     # upload game
     drawRect(app.width/2 + 12, 420, 2*app.smallButtonWidth + 48, app.largeButtonHeight, fill = 'gainsboro')
@@ -92,7 +92,7 @@ def homeScreen_redrawAll(app):
 
     # resume board
     drawRect(app.width/2 - app.largeButtonWidth/2, 515, 2*app.smallButtonWidth + 48, app.largeButtonHeight, fill = 'gainsboro')
-    drawLabel('resume (c)', app.width/2 - app.smallButtonWidth - 36, 515 + app.largeButtonHeight/2, size=30, font = 'monospace')
+    drawLabel('resume (r)', app.width/2 - app.smallButtonWidth - 36, 515 + app.largeButtonHeight/2, size=30, font = 'monospace')
 
     # go to help
     drawRect(app.width/2 + 12, 515, 2*app.smallButtonWidth + 48, app.largeButtonHeight, fill = 'gainsboro')
