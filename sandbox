@@ -93,8 +93,24 @@ def isLegalBlock(board, block):
     return areLegalValues(values)
 
 # END OF COPY
-
+"""
 print(boardA == boardASol) # false
 solToBoardA = solveSudoku(boardA)
 print(boardA == boardASol) # false
 print(solToBoardA == boardASol) # true
+"""
+
+class Hello():
+    def __init__(self, num):
+        self.identity = num
+        self.bool = True
+    
+H = Hello(1)
+Hi = copy.copy(H)
+Hey = copy.deepcopy(Hi)
+
+Hi.identity = 2
+Hi.bool = False
+Hey.identity = 3
+
+print(H.identity, Hi.identity, H.bool, Hey.identity)

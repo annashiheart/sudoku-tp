@@ -175,7 +175,6 @@ def boardTo2DList(board):
 def createBoard(app):
     if app.level != 'custom':
         randomNumber = chooseRandomNumber(app)
-        print(app.level, randomNumber)
         newBoard = readFile(f'tp-starter-files/boards/{app.level}-{randomNumber}.png.txt')
         app.board = boardTo2DList(newBoard)
         app.solutionBoard = solveSudoku(app, app.board)
@@ -282,6 +281,7 @@ def solveSudoku(app, board):
     if findNextEmptyCellFromHere(app, board, -1, app.cols) == None:
         return board
     else:
+        if findNextEmptyCellFromHere
         row, col = findNextEmptyCellFromHere(app, board, -1, app.cols)
         for i in range(1,10):
             board[row][col] = str(i)
@@ -297,6 +297,19 @@ def findNextEmptyCellFromHere(app, board, givenRow, givenCol):
         for col in range(app.cols):
             if board[row][col] == '0' and not (row == givenRow and col <= givenCol):
                 return row, col
+    return None
+
+def findNextSingletonCell(app, board, givenRow, givenCol):
+    app.selection = findNextEmptyCellFromHere(app, app.board, givenRow, givenCol)
+    if app.selection == None:
+        return None
+    row, col = app.selection
+    cellLegals = app.legalsBoard[row][col]
+    if len(cellLegals.shownLegals) == 1:
+        for value in cellLegals.shownLegals:
+            return row, col, app.solutionBoard[row][col]
+    else:
+        return findNextSingletonCell(app, app.board, row, col)
     return None
 
 def isBoardLegal(app, board):

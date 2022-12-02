@@ -8,6 +8,11 @@ from homeScreen import *
 # playScreen
 ##################################
 
+# delete this after debugging
+def prettyPrint(L):
+    for row in L:
+        print(row)
+
 ##################################
 # ANIMATION VIEW
 ##################################
@@ -29,7 +34,10 @@ def playScreen_onScreenStart(app):
     app.buttonWidth = 150
     app.buttonHeight = 50
     app.stepsPerSecond = 2
-    appStarted(app)
+    app.undoList = []
+    app.redoList = []
+    app.bannedWrongLegalCoords = []
+    # appStarted(app)
 
 def playScreen_redrawAll(app):
     drawBoard(app)
@@ -124,10 +132,16 @@ def drawCellNum(app, row, col, cellNum):
             fill=color, size = 28, font = 'monospace')
 
 def drawRightSide(app):
+    # top half
     drawRect(app.boardRightSide, app.boardTop, app.buttonWidth, 2*app.buttonHeight, fill = 'lightGrey')
     drawLabel(f'{app.mistakes}', app.boardRightSide + app.buttonWidth/2, app.boardTop + app.buttonHeight, fill='black', size = 20, font = 'monospace')
     drawRect(app.boardRightSide, app.boardTop + 130, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('delete(del)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 130 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
+    drawRect(app.boardRightSide, app.boardTop + 205, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
+    drawLabel('undo(u)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 205 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
+    drawRect(app.boardRightSide, app.boardTop + 280, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
+    drawLabel('redo(r)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
+    # bottom half
     color = 'grey' if app.boardEditMode else 'lightGrey'
     drawRect(app.boardRightSide, app.boardTop + 400, app.buttonWidth, app.buttonHeight, fill = color)
     drawLabel('edit(e)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 400 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
@@ -158,6 +172,13 @@ def drawLegals(app, row, col):
             legalSpacing = (app.boardWidth//9) / 4
             drawLabel(i+1, cellLeft + legalCol*legalSpacing, 
                     cellTop + legalRow*legalSpacing, fill='grey',)
+        elif (str(i+1) in cellLegals.manualIllegals) and (str(i+1) == app.solutionBoard[row][col]
+            and ((row, col) in app.bannedWrongLegalCoords)):
+            legalRow = i//3 + 1
+            legalCol = i%3 + 1
+            legalSpacing = (app.boardWidth//9) / 4
+            drawLabel(i+1, cellLeft + legalCol*legalSpacing, 
+                    cellTop + legalRow*legalSpacing, fill='maroon')
 
 ##################################
 # ANIMATION KEY AND MOUSE
@@ -186,6 +207,10 @@ def playScreen_onMousePress(app, mouseX, mouseY):
                 row, col = app.selection
                 cellLegals = app.legalsBoard[row][col]
                 setAndBanLegals(cellLegals, selectedNum)
+                # user bans legal that is in solution
+                if ((selectedNum == app.solutionBoard[row][col]) and 
+                    (selectedNum in cellLegals.manualIllegals)):
+                    app.bannedWrongLegalCoords.append((row, col))
             # input actual value
             else:
                 addNumber(app, selectedNum)
@@ -204,10 +229,18 @@ def playScreen_onMousePress(app, mouseX, mouseY):
         hint1(app, False)
 
     # right side
+    # top half
     elif ((app.selection != None) and
         (app.boardRightSide <= mouseX <= app.boardRightSide + app.buttonWidth) and 
         (app.boardTop + 130 <= mouseY <= app.boardTop + 130 + app.buttonHeight)):
         addNumber(app, '0')
+    elif ((app.boardRightSide <= mouseX <= app.boardRightSide + app.buttonWidth) and 
+        (app.boardTop + 205 <= mouseY <= app.boardTop + 205 + app.buttonHeight)):
+        undoMove(app)
+    elif ((app.boardRightSide <= mouseX <= app.boardRightSide + app.buttonWidth) and 
+        (app.boardTop + 280 <= mouseY <= app.boardTop + 280 + app.buttonHeight)):
+        redoMove(app)
+    # bottom half
     elif ((app.boardRightSide <= mouseX <= app.boardRightSide + app.buttonWidth) and 
         (app.boardTop + 400 <= mouseY <= app.boardTop + 400 + app.buttonHeight)):
         app.solutionBoard = solveSudoku(app, app.board)
@@ -237,6 +270,8 @@ def playScreen_onMouseMove(app, mouseX, mouseY):
             app.hoverNumber = None
 
 def playScreen_onKeyPress(app, key):
+    if key == 'p':
+        print(app.undoList)
     if key == 'h':
         setActiveScreen('homeScreen')
     if key == 'g':
@@ -255,9 +290,9 @@ def playScreen_onKeyPress(app, key):
         hint1(app, True)
     # add key for 'A', autoplay all singletons
     if key == 'u': # undo
-        pass
+        undoMove(app)
     if key == 'r': # redo
-        pass
+        redoMove(app)
     if key == 'n':
         app.legalsEditMode = not app.legalsEditMode 
     if app.selection != None:
@@ -275,6 +310,11 @@ def playScreen_onKeyPress(app, key):
                 row, col = app.selection
                 cellLegals = app.legalsBoard[row][col]
                 setAndBanLegals(cellLegals, key)
+                # user bans legal that is in solution
+                if ((key == app.solutionBoard[row][col]) and 
+                    (key in cellLegals.manualIllegals)):
+                    app.bannedWrongLegalCoords.append((row, col))
+
             else:
                 addNumber(app, key)
         if key == 'backspace':
@@ -352,20 +392,6 @@ def findNextEditableCellFromHere(app, givenRow, givenCol, dir):
                     return row, col
     return None
 
-def findNextSingletonCell(app, board, givenRow, givenCol):
-    app.selection = findNextEmptyCellFromHere(app, app.board, givenRow, givenCol)
-    if app.selection == None:
-        return None
-    row, col = app.selection
-    cellLegals = app.legalsBoard[row][col]
-    if len(cellLegals.shownLegals) == 1:
-        for value in cellLegals.shownLegals:
-            return row, col, app.solutionBoard[row][col]
-    else:
-        return findNextSingletonCell(app, app.board, row, col)
-    return None
-
-
 ##################################
 # PLAYER MOVES
 ##################################
@@ -373,6 +399,14 @@ def findNextSingletonCell(app, board, givenRow, givenCol):
 def addNumber(app, number):
     row, col = app.selection
     prevValue = app.board[row][col]
+    # do nothing if new number same as current
+    if prevValue == number:
+        return
+    # save previous board
+    app.undoList.append(State(app.board, row, col, prevValue)) 
+    # clear redo moves
+    app.redoList = []
+    # update board value
     app.board[row][col] = number
     # check if mistake
     if (number != app.solutionBoard[row][col]) and (number != '0'):
@@ -382,7 +416,35 @@ def addNumber(app, number):
         app.isGameOver = True
         app.selection = None
         app.hoverSelection = None
-    # ban the legals
+    # update legals after move
+    updateLegals(app, number, row, col, prevValue)
+
+def undoMove(app):
+    if app.undoList != []:
+        prevState = app.undoList.pop()
+        # save current state to redo
+        currValue = app.board[prevState.row][prevState.col]
+        app.redoList.append(State(app.board, prevState.row, prevState.col, currValue))
+        # reinstate previous state
+        app.board = prevState.board
+        app.selection = (prevState.row, prevState.col)
+        # update legals
+        updateLegals(app, prevState.val, prevState.row, prevState.col, currValue)
+
+def redoMove(app):
+    if app.redoList != []:
+        nextState = app.redoList.pop()
+        # save current state to undo
+        prevValue = app.board[nextState.row][nextState.col]
+        app.undoList.append(State(app.board, nextState.row, nextState.col, prevValue))
+        # reinstate redo state
+        app.board = nextState.board
+        app.selection = (nextState.row, nextState.col)
+        # update legals
+        updateLegals(app, nextState.val, nextState.row, nextState.col, prevValue)
+
+def updateLegals(app, number, row, col, prevValue):
+    app.bannedWrongLegalCoords = []
     block = row//3 * 3 + col//3
     for rowIndex in range(len(app.legalsBoard)):
         for colIndex in range(len(app.legalsBoard[rowIndex])):
@@ -427,21 +489,8 @@ def hint2(app): # to do later
 ##################################
 
 class State():
-    def __init__(self, playerBoard, legalsBoard):
-        self.currentBoard = copy.deepcopy(playerBoard)
-        self.undoList = []
-        self.redoList = []
-    
-    def makeMove(self, row, col, num):
-        self.undoList.append(self.currentBoard)
-        self.redoList = []
-        app.board[row][col] = num # add app?
-    
-    def undoMove(self):
-        prevMoveBoard = copy.deepcopy(self.undoList.pop())
-        self.redoList.append(prevMoveBoard)
-        self.currentBoard = prevMoveBoard
-
-    def redoMove(self):
-        nextMoveBoard = copy.deepcopy(self.redoList.pop())
-        self.currentBoard = nextMoveBoard
+    def __init__(self, board, row, col, val):
+        self.board = copy.deepcopy(board)
+        self.row = row
+        self.col = col
+        self.val = val
