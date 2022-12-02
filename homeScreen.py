@@ -58,6 +58,8 @@ def homeScreen_onKeyPress(app, key):
         app.level = 'custom'
         createBoard(app)
         setActiveScreen('playScreen')
+    elif key == 'u': 
+        app.inputTextMode = True
     elif key == 'r' and app.board!=None: setActiveScreen('playScreen')
     elif key == 'g': setActiveScreen('helpScreen')
 

@@ -125,28 +125,28 @@ def drawCellNum(app, row, col, cellNum):
 
 def drawRightSide(app):
     drawRect(app.boardRightSide, app.boardTop, app.buttonWidth, 2*app.buttonHeight, fill = 'lightGrey')
-    drawLabel(f'{app.mistakes}', app.boardRightSide + app.buttonWidth/2, app.boardTop + app.buttonHeight, fill='black', size = 28, font = 'monospace')
+    drawLabel(f'{app.mistakes}', app.boardRightSide + app.buttonWidth/2, app.boardTop + app.buttonHeight, fill='black', size = 20, font = 'monospace')
     drawRect(app.boardRightSide, app.boardTop + 130, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('delete', app.boardRightSide + app.buttonWidth/2, app.boardTop + 130 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawLabel('delete(del)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 130 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     color = 'grey' if app.boardEditMode else 'lightGrey'
     drawRect(app.boardRightSide, app.boardTop + 400, app.buttonWidth, app.buttonHeight, fill = color)
-    drawLabel('edit', app.boardRightSide + app.buttonWidth/2, app.boardTop + 400 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawLabel('edit(e)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 400 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     color = 'grey' if app.showLegals else 'lightGrey'
     drawRect(app.boardRightSide, app.boardTop + 475, app.buttonWidth, app.buttonHeight, fill = color)
-    drawLabel('legals', app.boardRightSide + app.buttonWidth/2, app.boardTop + 475 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawLabel('legals(l)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 475 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     color = 'grey' if app.legalsEditMode else 'lightGrey'
     drawRect(app.boardRightSide, app.boardTop + 550, app.buttonWidth, app.buttonHeight, fill = color)
-    drawLabel('notes', app.boardRightSide + app.buttonWidth/2, app.boardTop + 550 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawLabel('notes(n)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 550 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
 
 def drawLeftSide(app):
     drawRect(app.boardLeftSide, app.boardTop + 200, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('home', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 200 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawLabel('home(h)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 200 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 280, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('help', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawLabel('guide(g)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 360, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('autoplay', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawLabel('autoplay(S)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 440, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('hint', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 440 + app.buttonHeight/2, fill='black', size = 28, font = 'monospace')
+    drawLabel('hint(s)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 440 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
 
 def drawLegals(app, row, col):
     cellLeft, cellTop = getCellLeftTop(app, row, col)
@@ -252,7 +252,12 @@ def playScreen_onKeyPress(app, key):
     if key == 's':
         hint1(app, False)
     if key == 'S': # check this later
-        app.autoPlayOn = not app.autoPlayOn
+        hint1(app, True)
+    # add key for 'A', autoplay all singletons
+    if key == 'u': # undo
+        pass
+    if key == 'r': # redo
+        pass
     if key == 'n':
         app.legalsEditMode = not app.legalsEditMode 
     if app.selection != None:
@@ -284,7 +289,7 @@ def playScreen_onKeyPress(app, key):
             app.selection = findNextEmptyCellFromHere(app, app.board, -1, app.cols)
 
 def playScreen_onStep(app):
-    if app.autoPlayOn:
+    if app.autoPlayOn and findNextSingletonCell(app, app.board, -1, app.cols) != None:
         hint1(app, True)
         
 ##################################
@@ -409,8 +414,34 @@ def hint1(app, setValue):
     if findNextSingletonCell(app, app.board, row, col) != None:
         singletonRow, singletonCol, value = findNextSingletonCell(app, app.board, row, col)
         app.selection = singletonRow, singletonCol
-    if setValue:
-        addNumber(app, value)
+        if setValue:
+            addNumber(app, value)
+    app.autoPlayOn = False
 
 def hint2(app): # to do later
     pass
+
+
+##################################
+# STATE CLASS
+##################################
+
+class State():
+    def __init__(self, playerBoard, legalsBoard):
+        self.currentBoard = copy.deepcopy(playerBoard)
+        self.undoList = []
+        self.redoList = []
+    
+    def makeMove(self, row, col, num):
+        self.undoList.append(self.currentBoard)
+        self.redoList = []
+        app.board[row][col] = num # add app?
+    
+    def undoMove(self):
+        prevMoveBoard = copy.deepcopy(self.undoList.pop())
+        self.redoList.append(prevMoveBoard)
+        self.currentBoard = prevMoveBoard
+
+    def redoMove(self):
+        nextMoveBoard = copy.deepcopy(self.redoList.pop())
+        self.currentBoard = nextMoveBoard
