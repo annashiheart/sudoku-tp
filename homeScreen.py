@@ -177,16 +177,15 @@ def createBoard(app):
         randomNumber = chooseRandomNumber(app)
         newBoard = readFile(f'tp-starter-files/boards/{app.level}-{randomNumber}.png.txt')
         app.board = boardTo2DList(newBoard)
-        app.legalsBoard = findInitialLegalsBoard(app)
         app.solutionBoard = solveSudoku(app, app.board)
         app.initialVals = findInitialVals(app.board)
         app.boardEditMode = False
     else:
         app.board = [['0' for v in range(app.cols)] for w in range(app.rows)]
         app.boardEditMode = True
-        app.legalsBoard = findInitialLegalsBoard(app)
         app.solutionBoard = copy.deepcopy(app.board)
         app.initialVals = set()
+    app.legalsBoard = findInitialLegalsBoard(app)
     appStarted(app)
 
 def appStarted(app):
@@ -282,10 +281,8 @@ def solveSudoku(app, board):
     if findNextEmptyCellFromHere(app, board, -1, app.cols) == None:
         return board
     else:
-        if findNextSingletonCell(app, board, -1, app.cols) != None:
-            row, col, _ = findNextSingletonCell(app, board, -1, app.cols)
-        else:
-            row, col = findNextEmptyCellFromHere(app, board, -1, app.cols)
+        if findNextEmptyCellFromHere
+        row, col = findNextEmptyCellFromHere(app, board, -1, app.cols)
         for i in range(1,10):
             board[row][col] = str(i)
             if isBoardLegal(app, board):
@@ -296,7 +293,6 @@ def solveSudoku(app, board):
         return None
 
 def findNextEmptyCellFromHere(app, board, givenRow, givenCol):
-    print(givenRow)
     for row in range(givenRow, app.rows):
         for col in range(app.cols):
             if board[row][col] == '0' and not (row == givenRow and col <= givenCol):
@@ -311,7 +307,7 @@ def findNextSingletonCell(app, board, givenRow, givenCol):
     cellLegals = app.legalsBoard[row][col]
     if len(cellLegals.shownLegals) == 1:
         for value in cellLegals.shownLegals:
-            return row, col, value # app.solutionBoard[row][col]
+            return row, col, app.solutionBoard[row][col]
     else:
         return findNextSingletonCell(app, app.board, row, col)
     return None
