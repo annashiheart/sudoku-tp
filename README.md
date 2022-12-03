@@ -19,7 +19,7 @@ Board drawing functions adapted from exercises in Animations With 2D Lists (5.3)
 
 Backtracking code (solveSudoku) adapted from solveMiniSudoku (8.11) and isLegalSudoku (4.5).
 
-Code for reading and choosing files adapted from Term Project Guide.
+Code for readFile, writeFile, and random choice functions adapted from Term Project Guide.
 
 Preloaded Sudoku files from Term Project Guide.
 

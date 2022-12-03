@@ -20,6 +20,7 @@ def homeScreen_onScreenStart(app):
     app.board = None
     app.inputTextMode = False
     app.inputText = ''
+    app.boardFile = None
 
 def homeScreen_onKeyPress(app, key):
     if app.inputTextMode: 
@@ -29,7 +30,8 @@ def homeScreen_onKeyPress(app, key):
             app.inputText += key
         elif key == 'enter':
             app.inputTextMode = False
-            newBoard = readFile(f'tp-starter-files/boards/{app.inputText}.png.txt')
+            app.boardFile = f'tp-starter-files/boards/{app.inputText}.png.txt'
+            newBoard = readFile(app.boardFile)
             app.board = boardTo2DList(newBoard)
             app.legalsBoard = findInitialLegalsBoard(app)
             app.solutionBoard = solveSudoku(app, copy.deepcopy(app.board))
@@ -145,7 +147,7 @@ def homeScreen_onMousePress(app, mouseX, mouseY):
         setActiveScreen('helpScreen') 
 
 ##################################
-# CHOOSE AND READ FILE
+# FILE-RELATED FUNCTIONS
 ##################################
 
 def chooseRandomNumber(app):
@@ -161,12 +163,31 @@ def readFile(path):
     with open(path, "rt") as f:
         return f.read()
 
+def writeFile(path, contents):
+    with open(path, "wt") as f:
+        f.write(contents)
+
 def boardTo2DList(board):
     L = []
     for line in board.splitlines():
         M = line.split(' ')
         L.append(M)
     return L
+
+def change2DListToTextBoard(board):
+    rows = len(board)
+    textBoard = ''
+    textRows = []
+    for row in range(rows):
+        textRow = ' '.join(board[row])
+        textRows.append(textRow)
+    textBoard = '\n'.join(textRows) 
+    return textBoard
+
+def saveFile(app):
+    solutionInTextMode = change2DListToTextBoard(app.board)
+    writeFile(f'solutions-folder/{app.boardFile}', solutionInTextMode)
+
 
 ##################################
 # CREATE BOARDS
@@ -175,7 +196,8 @@ def boardTo2DList(board):
 def createBoard(app):
     if app.level != 'custom':
         randomNumber = chooseRandomNumber(app)
-        newBoard = readFile(f'tp-starter-files/boards/{app.level}-{randomNumber}.png.txt')
+        app.boardFile = f'tp-starter-files/boards/{app.level}-{randomNumber}.png.txt'
+        newBoard = readFile(app.boardFile)
         app.board = boardTo2DList(newBoard)
         app.legalsBoard = findInitialLegalsBoard(app)
         app.solutionBoard = solveSudoku(app, copy.deepcopy(app.board))
@@ -199,6 +221,7 @@ def appStarted(app):
     app.showLegals = False
     app.legalsEditMode = False 
     app.autoPlayOn = False
+    app.contestMode = False
 
 def findInitialVals(board):
     initialVals = set()

@@ -16,7 +16,23 @@ def boardTo2DList(board):
         L.append(M)
     return L
 
+def change2DListToTextBoard(board, rows, cols):
+    textBoard = ''
+    textRows = []
+    for row in range(rows):
+        textRow = ' '.join(board[row])
+        textRows.append(textRow)
+    textBoard = '\n'.join(textRows) 
+    return textBoard
+
+
 boardA = readFile('tp-starter-files/boards/easy-01.png.txt')
+boardA = boardTo2DList(boardA)
+prettyPrint(boardA)
+boardAInText = change2DListToTextBoard(boardA, 9, 9)
+print(boardAInText)
+
+
 boardA = boardTo2DList(boardA)
 boardASol = readFile('tp-starter-files/solutions/easy-01-solution.png-solution.txt')
 boardASol = boardTo2DList(boardASol)

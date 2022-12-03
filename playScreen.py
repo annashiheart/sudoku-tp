@@ -37,7 +37,6 @@ def playScreen_onScreenStart(app):
     app.undoList = []
     app.redoList = []
     app.bannedWrongLegalCoords = []
-    # appStarted(app)
 
 def playScreen_redrawAll(app):
     drawBoard(app)
@@ -45,7 +44,9 @@ def playScreen_redrawAll(app):
     drawBoardBorder(app)
     drawRightSide(app)
     drawLeftSide(app)
-    if app.isGameOver:
+    if app.isGameOver: 
+        if app.contestMode:
+            saveFile(app)
         drawGameOver(app) # change this to screen?
 
 def drawGameOver(app):
@@ -124,6 +125,8 @@ def drawCellNum(app, row, col, cellNum):
     cellWidth, cellHeight = getCellSize(app)
     if app.solutionBoard == None:
         color = 'grey'
+    elif app.contestMode:
+        color = 'black'
     elif cellNum == app.solutionBoard[row][col]:
         color = 'black'
     else:
@@ -153,6 +156,11 @@ def drawRightSide(app):
     drawLabel('notes(n)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 550 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
 
 def drawLeftSide(app):
+    color = 'grey' if app.contestMode else 'lightGrey'
+    drawRect(app.boardLeftSide, app.boardTop + 120, app.buttonWidth, app.buttonHeight, fill = color)
+    drawLabel('contest(c)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 120 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
+    drawRect(app.boardLeftSide, app.boardTop + 40, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
+    drawLabel('save(f)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 40 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 200, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('home(h)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 200 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 280, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
@@ -172,8 +180,10 @@ def drawLegals(app, row, col):
             legalSpacing = (app.boardWidth//9) / 4
             drawLabel(i+1, cellLeft + legalCol*legalSpacing, 
                     cellTop + legalRow*legalSpacing, fill='grey',)
-        elif (str(i+1) in cellLegals.manualIllegals) and (str(i+1) == app.solutionBoard[row][col]
-            and ((row, col) in app.bannedWrongLegalCoords)):
+        elif (not app.contestMode and
+            (str(i+1) in cellLegals.manualIllegals) and 
+            (str(i+1) == app.solutionBoard[row][col]) and 
+            ((row, col) in app.bannedWrongLegalCoords)):
             legalRow = i//3 + 1
             legalCol = i%3 + 1
             legalSpacing = (app.boardWidth//9) / 4
@@ -216,6 +226,12 @@ def playScreen_onMousePress(app, mouseX, mouseY):
                 addNumber(app, selectedNum)
     # left side
     if ((app.boardLeftSide <= mouseX <= app.boardLeftSide + app.buttonWidth) and 
+        (app.boardTop + 120 <= mouseY <= app.boardTop + 120 + app.buttonHeight)):
+        app.contestMode = not app.contestMode
+    elif ((app.boardLeftSide <= mouseX <= app.boardLeftSide + app.buttonWidth) and 
+        (app.boardTop + 40 <= mouseY <= app.boardTop + 40 + app.buttonHeight)):
+        saveFile(app)
+    elif ((app.boardLeftSide <= mouseX <= app.boardLeftSide + app.buttonWidth) and 
         (app.boardTop + 200 <= mouseY <= app.boardTop + 200 + app.buttonHeight)):
         setActiveScreen('homeScreen')
     elif ((app.boardLeftSide <= mouseX <= app.boardLeftSide + app.buttonWidth) and 
@@ -280,6 +296,10 @@ def playScreen_onKeyPress(app, key):
             row, col = app.selection
         print(findNextEmptyCellFromHere(app, app.board,  -1, app.cols))
     # game functions
+    if key == 'c':
+        app.contestMode = not app.contestMode
+    if key == 'f':
+        saveFile(app)
     if key == 'h':
         setActiveScreen('homeScreen')
     if key == 'g':
@@ -477,6 +497,8 @@ def updateLegals(app, number, row, col, prevValue):
 ##################################
 
 def hint1(app, setValue):
+    if app.contestMode:
+        return
     if app.selection == None:
         row, col = -1, app.cols
     else:
