@@ -31,10 +31,10 @@ def homeScreen_onKeyPress(app, key):
             app.inputTextMode = False
             newBoard = readFile(f'tp-starter-files/boards/{app.inputText}.png.txt')
             app.board = boardTo2DList(newBoard)
-            app.solutionBoard = solveSudoku(app, app.board)
+            app.legalsBoard = findInitialLegalsBoard(app)
+            app.solutionBoard = solveSudoku(app, copy.deepcopy(app.board))
             app.initialVals = findInitialVals(app.board)
             app.boardEditMode = False
-            app.legalsBoard = findInitialLegalsBoard(app)
             appStarted(app)
             setActiveScreen('playScreen')
 
@@ -177,15 +177,16 @@ def createBoard(app):
         randomNumber = chooseRandomNumber(app)
         newBoard = readFile(f'tp-starter-files/boards/{app.level}-{randomNumber}.png.txt')
         app.board = boardTo2DList(newBoard)
-        app.solutionBoard = solveSudoku(app, app.board)
+        app.legalsBoard = findInitialLegalsBoard(app)
+        app.solutionBoard = solveSudoku(app, copy.deepcopy(app.board))
         app.initialVals = findInitialVals(app.board)
         app.boardEditMode = False
     else:
         app.board = [['0' for v in range(app.cols)] for w in range(app.rows)]
         app.boardEditMode = True
+        app.legalsBoard = findInitialLegalsBoard(app)
         app.solutionBoard = copy.deepcopy(app.board)
         app.initialVals = set()
-    app.legalsBoard = findInitialLegalsBoard(app)
     appStarted(app)
 
 def appStarted(app):
@@ -277,12 +278,14 @@ def findValuesinBlock(board, block):
 ##################################
 
 def solveSudoku(app, board):
-    board = copy.deepcopy(board)
     if findNextEmptyCellFromHere(app, board, -1, app.cols) == None:
         return board
     else:
-        if findNextEmptyCellFromHere
-        row, col = findNextEmptyCellFromHere(app, board, -1, app.cols)
+        # rewrite find next singleton
+        if findNextSingletonCellForSolver(app, board) != None:
+            row, col = findNextSingletonCellForSolver(app, board)
+        else:
+            row, col = findNextEmptyCellFromHere(app, board, -1, app.cols)
         for i in range(1,10):
             board[row][col] = str(i)
             if isBoardLegal(app, board):
@@ -299,6 +302,15 @@ def findNextEmptyCellFromHere(app, board, givenRow, givenCol):
                 return row, col
     return None
 
+def findNextSingletonCellForSolver(app, board):
+    for row in range(app.rows):
+        for col in range(app.cols):
+            if board[row][col] == '0':
+                cellLegals = app.legalsBoard[row][col]
+                if len(cellLegals.shownLegals) == 1:
+                    return row, col
+    return None
+
 def findNextSingletonCell(app, board, givenRow, givenCol):
     app.selection = findNextEmptyCellFromHere(app, app.board, givenRow, givenCol)
     if app.selection == None:
@@ -307,7 +319,7 @@ def findNextSingletonCell(app, board, givenRow, givenCol):
     cellLegals = app.legalsBoard[row][col]
     if len(cellLegals.shownLegals) == 1:
         for value in cellLegals.shownLegals:
-            return row, col, app.solutionBoard[row][col]
+            return row, col, value
     else:
         return findNextSingletonCell(app, app.board, row, col)
     return None

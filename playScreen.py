@@ -117,7 +117,7 @@ def drawCell(app, row, col):
     else:
         color = None
     drawRect(cellLeft, cellTop, cellWidth, cellHeight,
-           fill=color, border='black', borderWidth=app.cellBorderWidth)
+           fill=color, border='dimGray', borderWidth=app.cellBorderWidth)
 
 def drawCellNum(app, row, col, cellNum):
     cellLeft, cellTop = getCellLeftTop(app, row, col)
@@ -270,8 +270,16 @@ def playScreen_onMouseMove(app, mouseX, mouseY):
             app.hoverNumber = None
 
 def playScreen_onKeyPress(app, key):
+    # debugging functions
     if key == 'p':
-        print(app.undoList)
+        if app.selection != None:
+            row, col = app.selection
+        print(findNextSingletonCell(app, app.board, -1, app.cols))
+    if key == 'q':
+        if app.selection != None:
+            row, col = app.selection
+        print(findNextEmptyCellFromHere(app, app.board,  -1, app.cols))
+    # game functions
     if key == 'h':
         setActiveScreen('homeScreen')
     if key == 'g':
