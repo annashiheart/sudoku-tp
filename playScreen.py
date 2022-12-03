@@ -162,13 +162,13 @@ def drawLeftSide(app):
     drawRect(app.boardLeftSide, app.boardTop + 40, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('save(f)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 40 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 200, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('home(h)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 200 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
+    drawLabel('home(esc)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 200 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 280, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('guide(g)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 360, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('autoplay(S)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
+    drawLabel('autoplay(s)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 360 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     drawRect(app.boardLeftSide, app.boardTop + 440, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
-    drawLabel('hint(s)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 440 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
+    drawLabel('hint(h)', app.boardLeftSide + app.buttonWidth/2, app.boardTop + 440 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
 
 def drawLegals(app, row, col):
     cellLeft, cellTop = getCellLeftTop(app, row, col)
@@ -287,11 +287,8 @@ def playScreen_onMouseMove(app, mouseX, mouseY):
 
 def playScreen_onKeyPress(app, key):
     # debugging functions
+    print(key)
     if key == 'p':
-        if app.selection != None:
-            row, col = app.selection
-        print(findNextSingletonCell(app, app.board, -1, app.cols))
-    if key == 'q':
         if app.selection != None:
             row, col = app.selection
         print(findNextEmptyCellFromHere(app, app.board,  -1, app.cols))
@@ -300,7 +297,7 @@ def playScreen_onKeyPress(app, key):
         app.contestMode = not app.contestMode
     if key == 'f':
         saveFile(app)
-    if key == 'h':
+    if key == 'escape':
         setActiveScreen('homeScreen')
     if key == 'g':
         setActiveScreen('helpScreen')
@@ -312,9 +309,9 @@ def playScreen_onKeyPress(app, key):
             app.isGameOver = True
         app.initialVals = findInitialVals(app.board)
         app.boardEditMode = not app.boardEditMode
-    if key == 's':
+    if key == 'h':
         hint1(app, False)
-    if key == 'S': # check this later
+    if key == 's': # check this later
         hint1(app, True)
     # add key for 'A', autoplay all singletons
     if key == 'u': # undo
