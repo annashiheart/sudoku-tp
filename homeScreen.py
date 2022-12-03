@@ -286,6 +286,15 @@ def solveSudoku(app, board):
             row, col = findNextSingletonCellForSolver(app, board)
         else:
             row, col = findNextEmptyCellFromHere(app, board, -1, app.cols)
+        cellLegals = app.legalsBoard[row][col]
+        for i in cellLegals.legals:
+            board[row][col] = i
+            if isBoardLegal(app, board):
+                solution = solveSudoku(app, board) 
+                if solution != None:
+                    return solution
+            board[row][col] = '0'
+        """        
         for i in range(1,10):
             board[row][col] = str(i)
             if isBoardLegal(app, board):
@@ -293,6 +302,7 @@ def solveSudoku(app, board):
                 if solution != None:
                     return solution
             board[row][col] = '0'
+        """
         return None
 
 def findNextEmptyCellFromHere(app, board, givenRow, givenCol):
