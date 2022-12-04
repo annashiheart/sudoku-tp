@@ -45,26 +45,30 @@ def playScreen_redrawAll(app):
     drawRightSide(app)
     drawLeftSide(app)
     if app.isGameOver: 
+        drawGameOver(app) # change this to screen?
         if app.contestMode:
             saveFile(app)
-        drawGameOver(app) # change this to screen?
 
 def drawGameOver(app):
-    if app.solutionBoard == None:
-        drawRect(app.boardLeft, app.boardTop, app.boardWidth, 
+    drawRect(app.boardLeft, app.boardTop, app.boardWidth, 
                 app.boardHeight, fill = 'black', opacity = 80)
+    if app.solutionBoard == None:
         drawLabel('Invalid board!', app.width/2, app.height/2 - 100, size = 40, 
                 fill = 'white', bold = True, font = 'monospace')
         drawLabel(f'Return home to try again', 
                 app.width/2, app.height/2 - 50, size = 30, fill = 'white', font = 'monospace')
     elif app.solutionBoard == app.board:
-        drawRect(app.boardLeft, app.boardTop, app.boardWidth, 
-                app.boardHeight, fill = 'black', opacity = 80)
         drawLabel('You won!', app.width/2, app.height/2 - 100, size = 40, 
                 fill = 'white', bold = True, font = 'monospace')
         mistakePlural = 'mistake' if app.mistakes==1 else 'mistakes'
         drawLabel(f'You made {app.mistakes} {mistakePlural}!', 
                 app.width/2, app.height/2 - 50, size = 30, fill = 'white', font = 'monospace')
+    elif app.mistakes > 0 and app.contestMode:
+        drawLabel('You lost!', app.width/2, app.height/2 - 100, size = 40, 
+                fill = 'white', bold = True, font = 'monospace')
+        drawLabel(f'You made a mistake in a contest.', 
+                app.width/2, app.height/2 - 50, size = 30, fill = 'white', font = 'monospace')
+
 
 def drawNumberBoxes(app):
     cellWidth, cellHeight = getCellSize(app)
@@ -436,7 +440,10 @@ def addNumber(app, number):
     # check if mistake
     if (number != app.solutionBoard[row][col]) and (number != '0'):
             app.mistakes += 1
-    # check if game over
+    # check if player lost (contest mode)
+    if app.mistakes > 0 and app.contestMode:
+        app.isGameOver = True
+    # check if player won
     if app.board == app.solutionBoard:
         app.isGameOver = True
         app.selection = None
@@ -506,18 +513,30 @@ def hint1(app, setValue):
         if setValue:
             addNumber(app, value)
     app.autoPlayOn = False
-
-def hint2(app): # to do later
-    pass
-
-
+"""
+def hint2(app): # finish this.
+    import itertools
+    L = [ col1, col2, col3, row1, row2, row3, block1, block2, block3, etc.]
+    print('Here are all the regions (lists of cells and legals):')
+    print('Here are all the combinations of 2-5 legals in a region:')
+    # loop through regions
+        for N in range(2,6):
+            for M in itertools.combinations(L, N):
+                # for combination of certain cells of size N
+                # want to see if they have a combination of N legals
+                # if N = 2, and two cells have 5, 6 and 5, 6 as legals
+                # highlight the cells
+                # check each cell's legals
+                # add to cell
+"""
 ##################################
 # STATE CLASS
 ##################################
 
 class State():
     def __init__(self, board, row, col, val):
-        self.board = copy.deepcopy(board)
+        self.board = copy.deepcopy(board) 
+        self.legals = [] # fix this to undo/redo legal set/ban
         self.row = row
         self.col = col
         self.val = val
