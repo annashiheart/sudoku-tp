@@ -37,6 +37,7 @@ def playScreen_onScreenStart(app):
     app.undoList = []
     app.redoList = []
     app.bannedWrongLegalCoords = []
+    app.selectionsForHint = []
 
 def playScreen_redrawAll(app):
     drawBoard(app)
@@ -117,6 +118,8 @@ def drawCell(app, row, col):
         color = 'gainsboro'
     elif (row, col) == app.selection:
         color = 'lightBlue'
+    elif (row, col) in app.selectionsForHint:
+        color = 'lightGreen'
     elif (row, col) == app.hoverSelection:
         color = 'aliceBlue'
     else:
@@ -202,9 +205,12 @@ def playScreen_onMousePress(app, mouseX, mouseY):
     if not app.isGameOver:
         selectedCell = getCell(app, mouseX, mouseY)
         selectedNum = getNumberFromBox(app, mouseX, mouseY)
+        if app.selection != None:
+            app.selectionsForHint = []
         if (selectedCell != None) and (selectedCell not in app.initialVals):
             if selectedCell != app.selection:
                 app.selection = selectedCell
+                app.selectionsForHint = []
             else:
                 app.selection = None
         elif (selectedNum != None) and (app.selection != None):
@@ -220,7 +226,7 @@ def playScreen_onMousePress(app, mouseX, mouseY):
             elif app.legalsEditMode:
                 row, col = app.selection
                 cellLegals = app.legalsBoard[row][col]
-                setAndBanLegals(cellLegals, selectedNum)
+                setAndBanLegals(app, cellLegals, selectedNum)
                 # user bans legal that is in solution
                 if ((selectedNum == app.solutionBoard[row][col]) and 
                     (selectedNum in cellLegals.manualIllegals)):
@@ -243,10 +249,10 @@ def playScreen_onMousePress(app, mouseX, mouseY):
         setActiveScreen('helpScreen')
     elif ((app.boardLeftSide <= mouseX <= app.boardLeftSide + app.buttonWidth) and 
         (app.boardTop + 360 <= mouseY <= app.boardTop + 360 + app.buttonHeight)):
-        hint1(app, True)
+        runThroughHints(app, True)
     elif ((app.boardLeftSide <= mouseX <= app.boardLeftSide + app.buttonWidth) and 
         (app.boardTop + 440 <= mouseY <= app.boardTop + 440 + app.buttonHeight)):
-        hint1(app, False)
+        runThroughHints(app, False)
 
     # right side
     # top half
@@ -291,11 +297,13 @@ def playScreen_onMouseMove(app, mouseX, mouseY):
 
 def playScreen_onKeyPress(app, key):
     # debugging functions
-    print(key)
     if key == 'p':
-        if app.selection != None:
+        print(app.legalsBoard[0][1].shownLegals)
+        print(app.legalsBoard[1][0].shownLegals)
+    if key == 'q':
+        if app.selection!= None:
             row, col = app.selection
-        print(findNextEmptyCellFromHere(app, app.board,  -1, app.cols))
+            print(app.legalsBoard[row][col].shownLegals)
     # game functions
     if key == 'c':
         app.contestMode = not app.contestMode
@@ -314,7 +322,7 @@ def playScreen_onKeyPress(app, key):
         app.initialVals = findInitialVals(app.board)
         app.boardEditMode = not app.boardEditMode
     if key == 'h':
-        hint1(app, False)
+        runThroughHints(app, False)
     if key == 's': # check this later
         hint1(app, True)
     # add key for 'A', autoplay all singletons
@@ -325,9 +333,11 @@ def playScreen_onKeyPress(app, key):
     if key == 'n':
         app.legalsEditMode = not app.legalsEditMode 
     if app.selection != None:
+        app.selectionsForHint = []
         row, col = app.selection
         if key in {'right', 'left', 'up', 'down'}:
             app.selection = findNextEditableCellFromHere(app, row, col, key)
+            app.selectionsForHint = []
         if key in '123456789':
             if app.boardEditMode:
                 row, col = app.selection
@@ -338,7 +348,7 @@ def playScreen_onKeyPress(app, key):
             elif app.legalsEditMode:
                 row, col = app.selection
                 cellLegals = app.legalsBoard[row][col]
-                setAndBanLegals(cellLegals, key)
+                setAndBanLegals(app, cellLegals, key)
                 # user bans legal that is in solution
                 if ((key == app.solutionBoard[row][col]) and 
                     (key in cellLegals.manualIllegals)):
@@ -432,7 +442,7 @@ def addNumber(app, number):
     if prevValue == number:
         return
     # save previous board
-    app.undoList.append(State(app.board, row, col, prevValue)) 
+    app.undoList.append(State(app.board, app.legalsBoard, row, col, prevValue)) 
     # clear redo moves
     app.redoList = []
     # update board value
@@ -454,26 +464,24 @@ def addNumber(app, number):
 def undoMove(app):
     if app.undoList != []:
         prevState = app.undoList.pop()
-        # save current state to redo
+        # save current state to redo list
         currValue = app.board[prevState.row][prevState.col]
-        app.redoList.append(State(app.board, prevState.row, prevState.col, currValue))
+        app.redoList.append(State(app.board, app.legalsBoard, prevState.row, prevState.col, currValue))
         # reinstate previous state
         app.board = prevState.board
+        app.legalsBoard = prevState.legals
         app.selection = (prevState.row, prevState.col)
-        # update legals
-        updateLegals(app, prevState.val, prevState.row, prevState.col, currValue)
 
 def redoMove(app):
     if app.redoList != []:
         nextState = app.redoList.pop()
-        # save current state to undo
+        # save current state to undo list
         prevValue = app.board[nextState.row][nextState.col]
-        app.undoList.append(State(app.board, nextState.row, nextState.col, prevValue))
+        app.undoList.append(State(app.board, app.legalsBoard, nextState.row, nextState.col, prevValue))
         # reinstate redo state
         app.board = nextState.board
+        app.legalsBoard = nextState.legals
         app.selection = (nextState.row, nextState.col)
-        # update legals
-        updateLegals(app, nextState.val, nextState.row, nextState.col, prevValue)
 
 def updateLegals(app, number, row, col, prevValue):
     app.bannedWrongLegalCoords = []
@@ -496,47 +504,120 @@ def updateLegals(app, number, row, col, prevValue):
                         cellLegals.manualIllegals.remove(prevValue)
                     cellLegals.shownLegals = (cellLegals.legals | cellLegals.manualLegals) - cellLegals.manualIllegals
 
+################# fix this for undo and redo!!!!!!
+def setAndBanLegals(app, cellLegals, key):
+    # save previous board
+    row, col = app.selection
+    app.undoList.append(State(app.board, app.legalsBoard, row, col, None)) 
+    # clear redo moves
+    app.redoList = []
+    # update legals values
+    if key in cellLegals.manualLegals:
+        cellLegals.manualLegals.remove(key)
+    elif key in cellLegals.manualIllegals:
+        cellLegals.manualIllegals.remove(key)
+    elif key in cellLegals.legals:
+        cellLegals.manualIllegals.add(key)
+    elif key in cellLegals.illegals:
+        cellLegals.manualLegals.add(key)
+    cellLegals.shownLegals = (cellLegals.legals | cellLegals.manualLegals) - cellLegals.manualIllegals
+
+
 ##################################
 # PROVIDE HINTS
 ##################################
 
+def runThroughHints(app, setValue):
+    if findNextSingletonCell(app, app.board, -1, app.cols) == None:
+        hint2(app)
+    else:
+        hint1(app, setValue)
+
 def hint1(app, setValue):
     if app.contestMode:
         return
-    if app.selection == None:
-        row, col = -1, app.cols
-    else:
-        row, col = app.selection
-    if findNextSingletonCell(app, app.board, row, col) != None:
-        singletonRow, singletonCol, value = findNextSingletonCell(app, app.board, row, col)
+    if findNextSingletonCell(app, app.board, -1, app.cols) != None:
+        singletonRow, singletonCol, value = findNextSingletonCell(app, app.board, -1, app.cols)
         app.selection = singletonRow, singletonCol
         if setValue:
             addNumber(app, value)
     app.autoPlayOn = False
-"""
+
 def hint2(app): # finish this.
     import itertools
-    L = [ col1, col2, col3, row1, row2, row3, block1, block2, block3, etc.]
-    print('Here are all the regions (lists of cells and legals):')
-    print('Here are all the combinations of 2-5 legals in a region:')
-    # loop through regions
-        for N in range(2,6):
-            for M in itertools.combinations(L, N):
-                # for combination of certain cells of size N
-                # want to see if they have a combination of N legals
-                # if N = 2, and two cells have 5, 6 and 5, 6 as legals
-                # highlight the cells
-                # check each cell's legals
-                # add to cell
-"""
+    listOfAllRegions = findAllRegions(app)
+    for N in range(2,6):
+        for region in listOfAllRegions:
+            maxLen = len(region)
+            for M in itertools.combinations(region, N):
+                # combine all the cells legals into one
+                sharedLegals = set()
+                for legalsObject in M:
+                    # add legals to general
+                    sharedLegals = sharedLegals | (legalsObject.shownLegals)
+                print(sharedLegals)
+                if app.selectionsForHint != []:
+                    print(app.selectionsForHint)
+                    break
+                elif (len(sharedLegals) == N and len(sharedLegals) < maxLen):
+                    print('True')
+                    for legalsObject in M:
+                        app.selectionsForHint.append((legalsObject.row, legalsObject.col))
+                        print(legalsObject.row, legalsObject.col)
+                    print(app.selectionsForHint)
+                    return True
+                else:
+                    print('try again')
+            if app.selectionsForHint != []:
+                print(v.row for v in region)
+                continue
+            
+
+
+def findAllRegions(app):
+    listOfAllRegions = []
+    for i in range(9):
+        listOfAllRegions.append(findLegalObjectsinRow(app.board, app.legalsBoard, i))
+        listOfAllRegions.append(findLegalObjectsinCol(app.board, app.legalsBoard, i))
+        listOfAllRegions.append(findLegalObjectsinBlock(app.board, app.legalsBoard, i))
+    return listOfAllRegions
+
+def findLegalObjects(board, values):
+    legalObjectsInEmptyCells = []
+    for value in values: 
+        row, col = value.row, value.col
+        if board[row][col] == '0':
+            legalObjectsInEmptyCells.append(value)
+    return legalObjectsInEmptyCells
+
+def findLegalObjectsinRow(board, legalsBoard, row):
+    values = legalsBoard[row]
+    return findLegalObjects(board, values)
+    
+def findLegalObjectsinCol(board, legalsBoard, col):
+    rows = len(legalsBoard)
+    values = [legalsBoard[row][col] for row in range(rows)]
+    return findLegalObjects(board, values)
+
+def findLegalObjectsinBlock(board, legalsBoard, block):
+    blockSize = 3
+    startRow = block // blockSize * blockSize
+    startCol = block % blockSize * blockSize
+    values = []
+    for drow in range(blockSize):
+        for dcol in range(blockSize):
+            row, col = startRow + drow, startCol + dcol
+            values.append(legalsBoard[row][col])
+    return findLegalObjects(board, values)
+
 ##################################
 # STATE CLASS
 ##################################
 
 class State():
-    def __init__(self, board, row, col, val):
+    def __init__(self, board, legals, row, col, boardval):
         self.board = copy.deepcopy(board) 
-        self.legals = [] # fix this to undo/redo legal set/ban
+        self.legals = copy.deepcopy(legals)
         self.row = row
         self.col = col
-        self.val = val
+        self.boardval = boardval

@@ -259,17 +259,6 @@ class Legals():
         self.manualIllegals = set()
         self.shownLegals = (self.legals | self.manualLegals) - self.manualIllegals
 
-def setAndBanLegals(cellLegals, key):
-    if key in cellLegals.manualLegals:
-        cellLegals.manualLegals.remove(key)
-    elif key in cellLegals.manualIllegals:
-        cellLegals.manualIllegals.remove(key)
-    elif key in cellLegals.legals:
-        cellLegals.manualIllegals.add(key)
-    elif key in cellLegals.illegals:
-        cellLegals.manualLegals.add(key)
-    cellLegals.shownLegals = (cellLegals.legals | cellLegals.manualLegals) - cellLegals.manualIllegals
-
 def findValues(L):
     seen = set()
     for value in L:

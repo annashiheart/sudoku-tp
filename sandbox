@@ -28,15 +28,15 @@ def change2DListToTextBoard(board, rows, cols):
 
 boardA = readFile('tp-starter-files/boards/easy-01.png.txt')
 boardA = boardTo2DList(boardA)
-prettyPrint(boardA)
+# prettyPrint(boardA)
 boardAInText = change2DListToTextBoard(boardA, 9, 9)
-print(boardAInText)
+# print(boardAInText)
 
-
+"""
 boardA = boardTo2DList(boardA)
 boardASol = readFile('tp-starter-files/solutions/easy-01-solution.png-solution.txt')
 boardASol = boardTo2DList(boardASol)
-
+"""
 
 
 # START OF BACKTRACKING CODE
@@ -129,4 +129,77 @@ Hi.identity = 2
 Hi.bool = False
 Hey.identity = 3
 
-print(H.identity, Hi.identity, H.bool, Hey.identity)
+# print(H.identity, Hi.identity, H.bool, Hey.identity)
+
+
+
+
+
+
+def hint2(rows, cols): # finish this.
+    import itertools
+    # organize all the regions into a list
+    row1 = []
+    L = [row1, ]
+    for row in range(rows):
+        for col in range(cols):
+            pass
+    L = [ '0', '1', '2', '3', '4']
+    # loop through regions
+    for region in L:
+        for N in range(2,6):
+            for M in itertools.combinations(L, N):
+                # combine all the cells legals into one
+                sharedLegals = set()
+                for cell in M:
+                    # add legals to general
+                    sharedLegals.add(cell)
+                print(sharedLegals)
+                if len(sharedLegals) == N:
+                    print('True')
+                    return True
+                # for combination of certain cells of size N
+                # want to see if they have a combination of N legals
+                # if N = 2, and two cells have 5, 6 and 5, 6 as legals
+                # highlight the cells
+                # check each cell's legals
+                # add to cell
+
+# hint2(4,2)
+
+
+# find all the regions (row, col, block)
+
+
+def findLegalObjectsinRow(board, row):
+    return board[row]
+    
+def findLegalObjectsinCol(board, col):
+    rows = len(board)
+    values = [board[row][col] for row in range(rows)]
+    return values
+
+def findLegalObjectsinBlock(board, block):
+    blockSize = 3
+    startRow = block // blockSize * blockSize
+    startCol = block % blockSize * blockSize
+    values = []
+    for drow in range(blockSize):
+        for dcol in range(blockSize):
+            row, col = startRow + drow, startCol + dcol
+            values.append(board[row][col])
+    return values
+
+# print(boardA)
+# print(findLegalObjectsinBlock(boardA, 8))
+
+
+class Hello():
+    def __init__(self, name):
+        self.name = name
+
+L = [[Hello('anna'), Hello('elisa')], [Hello('steven')]]
+M = copy.deepcopy(L)
+L[0][1].name = 'helen'
+print(M[0][1].name)
+print(L is M)
