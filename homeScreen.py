@@ -169,10 +169,12 @@ def chooseRandomNumber(app):
         randomBoardNumber = '0' + str(randomBoardNumber)
     return str(randomBoardNumber)
 
+# readFile from Term Project Guide
 def readFile(path):
     with open(path, "rt") as f:
         return f.read()
 
+# writeFile from Term Project Guide
 def writeFile(path, contents):
     with open(path, "wt") as f:
         f.write(contents)
@@ -305,6 +307,7 @@ def findValuesinBlock(board, block):
 # FIND BOARD SOLUTION
 ##################################
 
+# Adapted from solveMiniSudoku (8.11) and isLegalSudoku (4.5)
 def solveSudoku(app, board):
     if findNextEmptyCellFromHere(app, board, -1, app.cols) == None:
         return board

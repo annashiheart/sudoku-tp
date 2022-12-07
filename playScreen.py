@@ -86,7 +86,8 @@ def drawNumberBoxes(app):
     drawRect(app.boardLeft, app.boardTop + app.boardHeight + 20,
             app.boardWidth, app.boardHeight/9, fill = None, border = 'black',
             borderWidth = app.cellBorderWidth)
-                
+
+# Adapted from exercises in Animations With 2D Lists (5.3) 
 def drawBoard(app):
     for row in range(app.rows):
         for col in range(app.cols):
@@ -97,6 +98,7 @@ def drawBoard(app):
             elif app.showLegals:
                 drawLegals(app, row, col)
 
+# Adapted from exercises in Animations With 2D Lists (5.3) 
 def drawBoardBorder(app):
     # draw the blocks
     for i in range(3):
@@ -110,6 +112,7 @@ def drawBoardBorder(app):
     drawRect(app.boardLeft, app.boardTop, app.boardWidth, app.boardHeight,
             fill=None, border='black', borderWidth = app.boardBorderWidth)
 
+# Adapted from exercises in Animations With 2D Lists (5.3) 
 def drawCell(app, row, col):
     cellLeft, cellTop = getCellLeftTop(app, row, col)
     cellWidth, cellHeight = getCellSize(app)

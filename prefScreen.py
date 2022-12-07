@@ -67,6 +67,7 @@ def prefScreen_onKeyPress(app, key):
     elif key == 'n':
         app.legalsEditMode = not app.legalsEditMode
     elif key == 'f':
+        # app.getTextInput from Term Project Guide
         app.fontColor = app.getTextInput('new font color')
     elif key == 's':
         app.selectionColor = app.getTextInput('new selection color')

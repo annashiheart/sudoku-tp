@@ -9,7 +9,7 @@ You can solve puzzles ranging in difficulty (easy, medium, hard, evil). If you r
 
 The game can generate hints for you if you get stuck, and it can help show which values in a cell are legal and make your own notes to add or ban legals as you so wish.
 
-By default, the game will alert you with red font if you input the incorrect value in the board or attempt to ban the cell's correct value from the cell's legals. In contest mode, however, making such mistakes will cause the game to end!
+By default, the game will alert you with red font (this can be changed in preferences!) if you input the incorrect value in the board or attempt to ban the cell's correct value from the cell's legals. In contest mode, however, making such mistakes will cause the game to end!
 
 ### How to Play!
 
@@ -24,7 +24,7 @@ Board drawing functions adapted from exercises in Animations With 2D Lists (5.3)
 
 Backtracking code (solveSudoku) adapted from solveMiniSudoku (8.11) and isLegalSudoku (4.5).
 
-Code for readFile, writeFile, and random.choice functions adapted from Term Project Guide.
+Code for readFile, writeFile, random.choice, app.getTextInput functions adapted from Term Project Guide.
 
 Preloaded Sudoku files from Term Project Guide.
 
