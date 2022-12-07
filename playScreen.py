@@ -152,9 +152,10 @@ def drawRightSide(app):
     drawRect(app.boardRightSide, app.boardTop + 280, app.buttonWidth, app.buttonHeight, fill = 'lightGrey')
     drawLabel('redo(r)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     # bottom half
-    color = 'grey' if app.boardEditMode else 'lightGrey'
-    drawRect(app.boardRightSide, app.boardTop + 400, app.buttonWidth, app.buttonHeight, fill = color)
-    drawLabel('edit(e)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 400 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
+    if app.level == 'custom':
+        color = 'grey' if (app.boardEditMode and app.level == 'custom') else 'lightGrey'
+        drawRect(app.boardRightSide, app.boardTop + 400, app.buttonWidth, app.buttonHeight, fill = color)
+        drawLabel('edit(e)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 400 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     color = 'grey' if app.showLegals else 'lightGrey'
     drawRect(app.boardRightSide, app.boardTop + 475, app.buttonWidth, app.buttonHeight, fill = color)
     drawLabel('legals(l)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 475 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
@@ -216,7 +217,7 @@ def playScreen_onMousePress(app, mouseX, mouseY):
         elif (selectedNum != None) and (app.selection != None):
             selectedNum = str(selectedNum)
             # input custom board
-            if app.boardEditMode:
+            if app.boardEditMode and app.level == 'custom':
                 row, col = app.selection
                 app.solutionBoard[row][col] = selectedNum
                 app.board[row][col] = selectedNum
@@ -267,13 +268,19 @@ def playScreen_onMousePress(app, mouseX, mouseY):
         (app.boardTop + 280 <= mouseY <= app.boardTop + 280 + app.buttonHeight)):
         redoMove(app)
     # bottom half
-    elif ((app.boardRightSide <= mouseX <= app.boardRightSide + app.buttonWidth) and 
+    elif (app.level == 'custom' and
+        (app.boardRightSide <= mouseX <= app.boardRightSide + app.buttonWidth) and 
         (app.boardTop + 400 <= mouseY <= app.boardTop + 400 + app.buttonHeight)):
-        app.solutionBoard = solveSudoku(app, app.board)
+        app.boardEditMode = not app.boardEditMode
+        app.initialVals = findInitialVals(app.board)
+        app.solutionBoard = solveSudoku(app, copy.deepcopy(app.board))
         if app.solutionBoard == None:
             app.isGameOver = True
-        app.initialVals = findInitialVals(app.board)
-        app.boardEditMode = not app.boardEditMode
+        else:
+            for row in range(app.rows):
+                for col in range(app.cols):
+                    if (row,col) not in app.initialVals:
+                        app.board[row][col] = '0'
     elif ((app.boardRightSide <= mouseX <= app.boardRightSide + app.buttonWidth) and 
         (app.boardTop + 475 <= mouseY <= app.boardTop + 475 + app.buttonHeight)):
         app.showLegals = not app.showLegals
@@ -298,8 +305,9 @@ def playScreen_onMouseMove(app, mouseX, mouseY):
 def playScreen_onKeyPress(app, key):
     # debugging functions
     if key == 'p':
-        print(app.legalsBoard[0][1].shownLegals)
-        print(app.legalsBoard[1][0].shownLegals)
+        prettyPrint(app.board)
+        prettyPrint(app.solutionBoard)
+        print(app.board is app.solutionBoard)
     if key == 'q':
         if app.selection!= None:
             row, col = app.selection
@@ -315,12 +323,18 @@ def playScreen_onKeyPress(app, key):
         setActiveScreen('helpScreen')
     if key == 'l':
         app.showLegals = not app.showLegals
-    if key == 'e':
-        app.solutionBoard = solveSudoku(app, app.board)
-        if app.solutionBoard == None:
-            app.isGameOver = True
+    if key == 'e' and app.level == 'custom':
         app.initialVals = findInitialVals(app.board)
         app.boardEditMode = not app.boardEditMode
+        app.solutionBoard = solveSudoku(app, copy.deepcopy(app.board))
+        if app.solutionBoard == None:
+            app.isGameOver = True
+        else:
+            for row in range(app.rows):
+                for col in range(app.cols):
+                    if (row,col) not in app.initialVals:
+                        app.board[row][col] = '0'
+
     if key == 'h':
         runThroughHints(app, False)
     if key == 's': # check this later
@@ -353,7 +367,6 @@ def playScreen_onKeyPress(app, key):
                 if ((key == app.solutionBoard[row][col]) and 
                     (key in cellLegals.manualIllegals)):
                     app.bannedWrongLegalCoords.append((row, col))
-
             else:
                 addNumber(app, key)
         if key == 'backspace':
@@ -543,7 +556,7 @@ def hint1(app, setValue):
             addNumber(app, value)
     app.autoPlayOn = False
 
-def hint2(app): # finish this.
+def hint2(app): 
     import itertools
     listOfAllRegions = findAllRegions(app)
     for N in range(2,6):
@@ -553,23 +566,15 @@ def hint2(app): # finish this.
                 # combine all the cells legals into one
                 sharedLegals = set()
                 for legalsObject in M:
-                    # add legals to general
+                    # add legals to shared set
                     sharedLegals = sharedLegals | (legalsObject.shownLegals)
-                print(sharedLegals)
                 if app.selectionsForHint != []:
-                    print(app.selectionsForHint)
                     break
                 elif (len(sharedLegals) == N and len(sharedLegals) < maxLen):
-                    print('True')
                     for legalsObject in M:
                         app.selectionsForHint.append((legalsObject.row, legalsObject.col))
-                        print(legalsObject.row, legalsObject.col)
-                    print(app.selectionsForHint)
                     return True
-                else:
-                    print('try again')
             if app.selectionsForHint != []:
-                print(v.row for v in region)
                 continue
             
 

@@ -5,6 +5,7 @@ from runAppWithScreens import *
 from homeScreen import *
 from playScreen import * 
 from helpScreen import *
+from prefScreen import *
 
 ##################################
 # main
