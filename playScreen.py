@@ -74,7 +74,7 @@ def drawGameOver(app):
 def drawNumberBoxes(app):
     cellWidth, cellHeight = getCellSize(app)
     for i in range(9):
-        color = 'pink' if i+1 == app.hoverNumber else 'lavenderBlush'
+        color = app.selectionColorNum if i+1 == app.hoverNumber else app.hoverColorNum
         drawRect(app.boardLeft + i*(app.boardWidth/9), 
                 app.boardTop + app.boardHeight + 20, 
                 app.boardWidth/9, app.boardHeight/9, 
@@ -117,11 +117,11 @@ def drawCell(app, row, col):
     if (row, col) in app.initialVals:
         color = 'gainsboro'
     elif (row, col) == app.selection:
-        color = 'lightBlue'
+        color = app.selectionColor
     elif (row, col) in app.selectionsForHint:
-        color = 'lightGreen'
+        color = app.hintColor
     elif (row, col) == app.hoverSelection:
-        color = 'aliceBlue'
+        color = app.hoverColor
     else:
         color = None
     drawRect(cellLeft, cellTop, cellWidth, cellHeight,
@@ -133,11 +133,11 @@ def drawCellNum(app, row, col, cellNum):
     if app.solutionBoard == None:
         color = 'grey'
     elif app.contestMode:
-        color = 'black'
+        color = app.fontColor
     elif cellNum == app.solutionBoard[row][col]:
-        color = 'black'
+        color = app.fontColor
     else:
-        color = 'red'
+        color = app.incorrectColor
     drawLabel(cellNum, cellLeft + cellWidth/2, cellTop + cellHeight/2, 
             fill=color, size = 28, font = 'monospace')
 
@@ -153,7 +153,7 @@ def drawRightSide(app):
     drawLabel('redo(r)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 280 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     # bottom half
     if app.level == 'custom':
-        color = 'grey' if (app.boardEditMode and app.level == 'custom') else 'lightGrey'
+        color = 'grey' if app.boardEditMode else 'lightGrey'
         drawRect(app.boardRightSide, app.boardTop + 400, app.buttonWidth, app.buttonHeight, fill = color)
         drawLabel('edit(e)', app.boardRightSide + app.buttonWidth/2, app.boardTop + 400 + app.buttonHeight/2, fill='black', size = 20, font = 'monospace')
     color = 'grey' if app.showLegals else 'lightGrey'
@@ -196,7 +196,7 @@ def drawLegals(app, row, col):
             legalCol = i%3 + 1
             legalSpacing = (app.boardWidth//9) / 4
             drawLabel(i+1, cellLeft + legalCol*legalSpacing, 
-                    cellTop + legalRow*legalSpacing, fill='maroon')
+                    cellTop + legalRow*legalSpacing, fill=app.incorrectColor)
 
 ##################################
 # ANIMATION KEY AND MOUSE
@@ -305,9 +305,8 @@ def playScreen_onMouseMove(app, mouseX, mouseY):
 def playScreen_onKeyPress(app, key):
     # debugging functions
     if key == 'p':
-        prettyPrint(app.board)
-        prettyPrint(app.solutionBoard)
-        print(app.board is app.solutionBoard)
+        row, col = app.selection
+        print(app.legalsBoard[row][col].shownLegals)
     if key == 'q':
         if app.selection!= None:
             row, col = app.selection

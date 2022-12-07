@@ -21,6 +21,7 @@ def homeScreen_onScreenStart(app):
     app.inputTextMode = False
     app.inputText = ''
     app.boardFile = None
+    appStarted(app)
 
 def homeScreen_onKeyPress(app, key):
     if app.inputTextMode: 
@@ -31,13 +32,13 @@ def homeScreen_onKeyPress(app, key):
         elif key == 'enter':
             app.inputTextMode = False
             app.boardFile = f'tp-starter-files/boards/{app.inputText}.png.txt'
+            app.inputText = ''
             newBoard = readFile(app.boardFile)
             app.board = boardTo2DList(newBoard)
             app.legalsBoard = findInitialLegalsBoard(app)
             app.solutionBoard = solveSudoku(app, copy.deepcopy(app.board))
             app.initialVals = findInitialVals(app.board)
             app.boardEditMode = False
-            appStarted(app)
             setActiveScreen('playScreen')
 
     elif key == 'e': 
@@ -86,6 +87,10 @@ def homeScreen_redrawAll(app):
     drawRect(app.width/2 - app.largeButtonWidth/2, 420, 2*app.smallButtonWidth + 48, app.largeButtonHeight, fill = 'gainsboro')
     drawLabel('create (c)', app.width/2 - app.smallButtonWidth - 36, 420 + app.largeButtonHeight/2, size=30, font = 'monospace')
 
+    # go to preferences
+    drawRect(app.width/2 - app.smallButtonWidth - 24, 610, 2*app.smallButtonWidth + 48, app.largeButtonHeight, fill = 'gainsboro')
+    drawLabel('preferences (p)', app.width/2, 610 + app.largeButtonHeight/2, size=30, font = 'monospace')
+
     # upload game
     drawRect(app.width/2 + 12, 420, 2*app.smallButtonWidth + 48, app.largeButtonHeight, fill = 'gainsboro')
     drawLabel('upload (u)', app.width/2 + 36 + app.smallButtonWidth, 420 + app.largeButtonHeight/2, size=30, font = 'monospace')
@@ -103,9 +108,6 @@ def homeScreen_redrawAll(app):
     drawRect(app.width/2 + 12, 515, 2*app.smallButtonWidth + 48, app.largeButtonHeight, fill = 'gainsboro')
     drawLabel('guide (g)', app.width/2 + 36 + app.smallButtonWidth, 515 + app.largeButtonHeight/2, size=30, font = 'monospace')
 
-    # go to preferences
-    drawRect(app.width/2 - app.smallButtonWidth - 24, 610, 2*app.smallButtonWidth + 48, app.largeButtonHeight, fill = 'gainsboro')
-    drawLabel('preferences (p)', app.width/2, 610 + app.largeButtonHeight/2, size=30, font = 'monospace')
 
 def homeScreen_onMousePress(app, mouseX, mouseY):
     # new game
@@ -217,7 +219,6 @@ def createBoard(app):
         app.legalsBoard = findInitialLegalsBoard(app)
         app.solutionBoard = [['0' for v in range(app.cols)] for w in range(app.rows)]
         app.initialVals = set()
-    appStarted(app)
 
 def appStarted(app):
     app.selection = None
@@ -230,6 +231,13 @@ def appStarted(app):
     app.legalsEditMode = False 
     app.autoPlayOn = False
     app.contestMode = False
+    app.fontColor = 'black'
+    app.selectionColorNum = 'pink'
+    app.hoverColorNum = 'lavenderBlush'
+    app.selectionColor = 'lightBlue'
+    app.hoverColor = 'aliceBlue'
+    app.hintColor = 'lightGreen'
+    app.incorrectColor = 'maroon'
 
 def findInitialVals(board):
     initialVals = set()

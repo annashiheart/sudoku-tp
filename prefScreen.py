@@ -13,31 +13,33 @@ def prefScreen_onScreenStart(app):
     app.largeButtonWidth = 600
     app.largeButtonHeight = 75
 
-def prefScreen_onKeyPress(app, key):
-    if key == 'escape': setActiveScreen('homeScreen')
-
 def prefScreen_redrawAll(app):
     drawRect(app.boardLeft, app.boardTop, app.boardWidth, app.boardHeight,
             fill=None, border='gainsboro', borderWidth = app.boardBorderWidth)
     instructions =  [f'contest mode: {app.contestMode}',
                     f'show legals: {app.showLegals}',
                     f'edit legals: {app.legalsEditMode}',
-                    f'font color: {app.legalsEditMode}',
-                    f'selection color: {app.legalsEditMode}',
-                    f'hover color: {app.legalsEditMode}',
-                    f'hint color: {app.legalsEditMode}',
-                    f'incorrect color: {app.legalsEditMode}',]
+                    f'font color: {app.fontColor}',
+                    f'selection color: {app.selectionColor}',
+                    f'hover color: {app.hoverColor}',
+                    f'number selection color: {app.selectionColorNum}',
+                    f'number hover color: {app.hoverColorNum}',
+                    f'hint color: {app.hintColor}',
+                    f'incorrect color: {app.incorrectColor}',]
     toggles =       ['c',
                     'l',
                     'n',
                     'f',
                     's',
                     'o',
+                    't',
+                    'v',
                     'h',
                     'i',]
+    drawLabel('Press the key on the left to change the setting', app.boardLeft + 40, app.boardTop + 40, size=16, align='left-top', font = 'monospace')
     for i in range(len(instructions)):
-        drawLabel(instructions[i], app.boardLeft + 40, app.boardTop + 40 + i*20, size=16, align='left-top', font = 'monospace')
-        drawLabel(toggles[i], app.boardRight - 40, app.boardTop + 40 + i*20, size=16, align='left-top', font = 'monospace')
+        drawLabel(instructions[i], app.boardLeft + 80, app.boardTop + 60 + i*20, size=16, align='left-top', font = 'monospace')
+        drawLabel(toggles[i], app.boardLeft + 40, app.boardTop + 60 + i*20, size=16, align='left-top', font = 'monospace')
 
     # drawRightSide(app)
     drawLeftSide(app)
@@ -55,3 +57,22 @@ def prefScreen_onMousePress(app, mouseX, mouseY):
     if ((app.boardLeftSide <= mouseX <= app.boardLeftSide + app.buttonWidth) and 
         (app.boardTop + 200 <= mouseY <= app.boardTop + 200 + app.buttonHeight)):
         setActiveScreen('homeScreen')
+
+def prefScreen_onKeyPress(app, key):
+    if key == 'escape': setActiveScreen('homeScreen')
+    elif key == 'c':
+        app.contestMode = not app.contestMode
+    elif key == 'l':
+        app.showLegals = not app.showLegals
+    elif key == 'n':
+        app.legalsEditMode = not app.legalsEditMode
+    elif key == 'f':
+        app.fontColor = app.getTextInput('new font color')
+    elif key == 's':
+        app.selectionColor = app.getTextInput('new selection color')
+    elif key == 'o':
+        app.hoverColor = app.getTextInput('new hover color')
+    elif key == 'h':
+        app.hintColor = app.getTextInput('new hint color')
+    elif key == 'i':
+        app.fontColor = app.getTextInput('new incorrect color')

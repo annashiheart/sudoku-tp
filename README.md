@@ -5,7 +5,7 @@
 
 Play Sudoku from your convenience of your personal laptop – anytime, anywhere!
 
-You can solve puzzles ranging in difficulty (easy, medium, hard, evil). If you run out, you can upload your own puzzle in .txt format to the tp-starter-files folder or even create a custom board – the app will generate a solution for you! 
+You can solve puzzles ranging in difficulty (easy, medium, hard, evil). If you run out, you can upload your own puzzle in .txt format to the tp-starter-files folder or even create a custom board – the app will generate a solution for you!
 
 The game can generate hints for you if you get stuck, and it can help show which values in a cell are legal and make your own notes to add or ban legals as you so wish.
 
